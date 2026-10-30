@@ -1,0 +1,25 @@
+{
+  "name": "ai-mastery-learning-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Mobile-first backend learning portal",
+  "type": "module",
+  "scripts": {
+    "dev": "node apps/web/server.mjs",
+    "start": "node apps/web/server.mjs",
+    "test": "node --test",
+    "build": "node --check apps/web/server.mjs && node --check apps/web/lessons.mjs && node --check apps/web/highlight.mjs && node --check apps/web/public/app.js && node --check apps/web/jd.mjs && node --check apps/web/jd-store.mjs && node --check apps/web/jd-api.mjs && node --check apps/web/jd-ai.mjs && node --check apps/web/jd-naukri.mjs && node --check apps/web/public/jd.js",
+    "jd:migrate": "node apps/web/jd-cli.mjs migrate",
+    "jd:import": "node apps/web/jd-cli.mjs import",
+    "lessons:lint": "node apps/web/lessons.mjs lint",
+    "lessons:verify": "node apps/web/lessons.mjs verify",
+    "lessons:coverage": "node apps/web/lessons.mjs coverage"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "pg": "^8.16.3",
+    "shiki": "^4.5.0"
+  }
+}

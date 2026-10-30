@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0c111d" />
+    <meta name="description" content="A focused daily path to backend mastery." />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>AI Mastery · Learn backend engineering</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/lesson.css" />
+    <link rel="stylesheet" href="/jd.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#today" aria-label="AI Mastery home">
+          <span class="brand-mark">A</span>
+          <span><strong>AI Mastery</strong><small>backend engineering</small></span>
+        </a>
+        <nav class="side-nav" aria-label="Primary navigation">
+          <a class="nav-item active" href="#today" data-view="today"><span>◈</span>Today</a>
+          <a class="nav-item" href="#path" data-view="path"><span>⌘</span>Learning path</a>
+          <a class="nav-item" href="#jd" data-view="jd"><span>▤</span>JD Intelligence</a>
+          <a class="nav-item" href="#review" data-view="review"><span>↻</span>Review <b class="nav-badge">3</b></a>
+          <a class="nav-item" href="#saved" data-view="saved"><span>♡</span>Saved</a>
+          <a class="nav-item" href="#me" data-view="me"><span>◉</span>Me</a>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="streak-card"><span class="flame">✦</span><div><strong>7 day streak</strong><small>Keep the momentum</small></div></div>
+          <button class="profile-chip"><span class="avatar">AM</span><span><strong>Alex Morgan</strong><small>Builder track</small></span><span>···</span></button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <button class="mobile-brand" aria-label="Open navigation"><span class="brand-mark">A</span></button>
+          <div class="breadcrumb"><span>Workspace</span><span>/</span><strong id="crumb">Today</strong></div>
+          <div class="top-actions"><span class="offline-chip"><i></i> Local mode</span><button class="icon-button" aria-label="Toggle theme">☼</button><button class="avatar small">AM</button></div>
+        </header>
+        <div id="content" class="content"></div>
+      </main>
+    </div>
+    <nav class="bottom-nav" aria-label="Mobile navigation">
+      <a class="active" href="#today" data-view="today"><span>◈</span>Today</a><a href="#path" data-view="path"><span>⌘</span>Path</a><a href="#jd" data-view="jd"><span>▤</span>JDs</a><a href="#review" data-view="review"><span>↻</span>Review</a><a href="#saved" data-view="saved"><span>♡</span>Saved</a><a href="#me" data-view="me"><span>◉</span>Me</a>
+    </nav>
+    <script src="/jd.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

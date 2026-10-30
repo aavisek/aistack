@@ -1,0 +1,40 @@
+services:
+  jd-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: aistack
+      POSTGRES_USER: aistack
+      POSTGRES_PASSWORD: ${JD_POSTGRES_PASSWORD:-aistack_local}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - jd-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aistack -d aistack"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      PORT: 3000
+      HOST: 0.0.0.0
+      JD_DATABASE_URL: postgresql://aistack:${JD_POSTGRES_PASSWORD:-aistack_local}@jd-db:5432/aistack
+      JD_SCREENSHOT_DIR: /app/Job Description
+    volumes:
+      - "../Job Description:/app/Job Description"
+    depends_on:
+      jd-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  jd-postgres:

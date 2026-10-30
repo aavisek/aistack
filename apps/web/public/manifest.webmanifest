@@ -1,0 +1,9 @@
+{
+  "name": "AI Mastery",
+  "short_name": "AI Mastery",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c111d",
+  "theme_color": "#0c111d",
+  "description": "A focused daily path to backend mastery."
+}
