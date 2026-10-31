@@ -93,13 +93,34 @@ test("Naukri text reuses AI evidence validation and retains original text", asyn
   await assert.rejects(processor.analyzeText(url, " "), /empty/);
 });
 
+test("missing structured data uses browser fallback once with the validated canonical URL", async () => {
+  const calls = [];
+  const text = await fetchNaukriJob(`${url}?src=cluster`, async () => new Response("<html><script>render()</script></html>", {
+    headers: { "content-type": "text/html" }
+  }), async (target) => { calls.push(target); return "Title: AI Architect\n\nPython is required."; });
+  assert.deepEqual(calls, [url]);
+  assert.match(text, /Python is required/);
+});
+
+test("browser failures remain explicit and invalid or ambiguous pages do not trigger fallback", async () => {
+  const render = async () => { throw new Error("Unexpected browser fallback"); };
+  assert.match(await fetchNaukriJob(url, async () => page(), render), /Python/);
+  for (const data of [[posting, posting], { ...posting, description: "" }]) {
+    await assert.rejects(fetchNaukriJob(url, async () => page(data), render), /multiple job|incomplete job/);
+  }
+  await assert.rejects(fetchNaukriJob(url, async () => new Response("denied", { status: 403 }), render), /HTTP 403/);
+  const { JdError } = await import("./jd.mjs");
+  await assert.rejects(fetchNaukriJob(url, async () => page({ "@type": "WebSite" }),
+    async () => { throw new JdError("Browser dependency missing", 503); }), /Browser dependency missing/);
+});
+
 test("batch continues past blocked URLs and saves only evidence-validated jobs", async (t) => {
   t.mock.method(globalThis, "fetch", async (target) => target === secondUrl ? new Response("denied", { status: 403 }) : page());
   const processor = new AzureJdProcessor(null, {});
   processor.request = async () => extraction;
   const saved = [];
   const progress = { state: "running", total: 2, processed: 0, jobs: 0, failed: 0, errors: [] };
-  await importNaukriJobs(processor, { saveAiJob: async (job) => saved.push(job) }, [secondUrl, url], progress);
+  await importNaukriJobs(processor, { hasImportedJob: async () => false, saveAiJob: async (job) => saved.push(job) }, [secondUrl, url], progress);
   assert.equal(saved.length, 1);
   assert.equal(saved[0].sourceUrl, url);
   assert.deepEqual(saved[0].screenshotIds, []);
@@ -118,7 +139,7 @@ test("API starts URL analysis, exposes progress and locks other imports until co
     return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(extraction) } }] }), { headers: { "content-type": "application/json" } });
   });
   const saved = [];
-  const store = { pool: { query: async () => ({}) }, saveAiJob: async (job) => saved.push(job) };
+  const store = { pool: { query: async () => ({}) }, hasImportedJob: async () => false, saveAiJob: async (job) => saved.push(job) };
   const api = createJdApi(store, configuration);
   const request = async (path, method = "POST", data = { text: url }, headers = {}) => {
     const req = Readable.from([Buffer.from(JSON.stringify(data))]);

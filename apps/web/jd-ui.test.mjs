@@ -2,161 +2,222 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
 import { readFile } from "node:fs/promises";
+import { platformLearningRoadmap } from "./jd-roadmap.mjs";
 
-async function browser({ failure = null, uploadFailure = null, responses = {} } = {}) {
+const id = "11111111-1111-4111-8111-111111111111";
+const secondId = "22222222-2222-4222-8222-222222222222";
+const saved = { id, name: "<October batch>", createdAt: "2026-10-31T04:00:00.000Z", state: "completed", hasReport: true };
+const report = {
+  jobs: [{ id: "job", title: "<b>Architect</b>", company: "", roleFamily: "ai-architect", reviewed: false, technologyCount: 1 }],
+  demand: {
+    totalJobs: 1, technologyBreakdown: [{ name: "<Python>", type: "Languages", jobCount: 1, share: 100 }],
+    areas: [{ rank: 1, area: "Languages", jobCount: 1, share: 100, technologyCount: 1 }],
+    technologies: [{ name: "<Python>", category: "Languages", jobCount: 1, share: 100, requiredCount: 1, preferredCount: 0,
+      evidence: [{ jobId: "job", title: "<b>Architect</b>", evidence: "<script>evidence</script>" }] }]
+  },
+  recommendations: [
+    { role: "ai-platform-architect", title: "AI Platform Architect", totalJobs: 1, tools: [
+      { rank: 1, name: "<Python>", type: "Languages", jobCount: 1, share: 100, evidence: [] }
+    ] },
+    { role: "ai-architect", title: "AI Solution Architect", totalJobs: 0, tools: [] }
+  ],
+  technologies: [
+    { name: "AKS", aliases: ["Azure Kubernetes Service"], type: "Cloud platforms and services", builtIn: true, jobCount: 1 },
+    { name: "PostgreSQL", aliases: ["Postgres"], type: "Databases", builtIn: true, jobCount: 0 }
+  ],
+  roadmap: platformLearningRoadmap({ totalJobs: 1, tools: [] }),
+  previous: null
+};
+const idle = { state: "idle", total: 0, processed: 0, jobs: 0, imported: 0, skipped: 0, failed: 0, errors: [] };
+
+async function browser({ failure = null, responses = {}, hash = "#jd", pdfFailure = null } = {}) {
   const nodes = new Map();
   const requests = [];
+  const downloads = [];
   const timers = [];
   const node = (selector) => {
-    if (!nodes.has(selector)) nodes.set(selector, { textContent: "", innerHTML: "", disabled: false, dataset: {}, setAttribute() {}, classList: { toggle() {}, add() {} } });
+    if (!nodes.has(selector)) nodes.set(selector, { value: "", textContent: "", innerHTML: "", disabled: false, dataset: {}, focus() {}, setAttribute() {}, classList: { toggle() {}, add() {} } });
     return nodes.get(selector);
   };
   const container = { innerHTML: "", querySelector: node };
   const context = vm.createContext({
-    window: {}, location: { hash: "#jd" }, clearTimeout() {}, setTimeout(callback) { timers.push(callback); },
-    fetch: async (url, options) => {
+    URL: { createObjectURL() { return "blob:pdf"; }, revokeObjectURL() {} },
+    document: {
+      body: { append() {} },
+      createElement() { return { click() { downloads.push({ href: this.href, filename: this.download }); }, remove() {} }; }
+    },
+    navigator: { clipboard: { writeText: async (text) => { context.copiedText = text; } } },
+    window: {}, location: { hash }, clearTimeout() {}, setTimeout(callback) { timers.push(callback); },
+    fetch: async (url, options = {}) => {
       requests.push({ url, options });
+      if (url.includes("/pdf/")) return pdfFailure
+        ? { ok: false, json: async () => ({ error: { message: pdfFailure } }) }
+        : { ok: true, headers: { get: () => "application/pdf" }, blob: async () => ({}) };
       if (failure) return { ok: false, json: async () => ({ error: { message: failure } }) };
-      if (url.startsWith("/api/jd/upload?")) return uploadFailure
-        ? { ok: false, json: async () => ({ error: { message: uploadFailure } }) }
-        : { ok: true, json: async () => ({ data: { skipped: false } }) };
-      const override = responses[url.slice("/api/jd".length)];
-      if (override) return { ok: true, json: async () => ({ data: typeof override === "function" ? override() : override }) };
-      const data = {
-        "/import": { state: "running", total: 0, processed: 0, imported: 0, skipped: 0, failed: 0, errors: [] },
-        "/status": { progress: { state: "idle", total: 0, processed: 0, imported: 0, skipped: 0, failed: 0, errors: [] }, aiProgress: { state: "idle", total: 0, processed: 0, jobs: 0, failed: 0, errors: [] }, categories: ["Languages"], roles: ["ai-architect"], aiEnabled: true },
-        "/screenshots": [{ id: "page", sourcePath: "<script>bad</script>.jpeg", text: "<img src=x onerror=bad>", status: "ready" }],
-        "/jobs": [{ id: "job", title: "<b>Architect</b>", company: "", roleFamily: "ai-architect", reviewed: false, technologyCount: 1 }],
-        "/demand": { totalJobs: 1, areas: [{ rank: 1, area: "Languages", jobCount: 1, share: 100, technologyCount: 1 }], technologies: [{ name: "<Python>", category: "Languages", jobCount: 1, share: 100, requiredCount: 1, preferredCount: 0,
-          evidence: [{ jobId: "job", title: "<b>Architect</b>", evidence: "<script>evidence</script>" }] }], learningPlan: [] }
-      }[url.slice("/api/jd".length)];
+      const path = url.slice("/api/jd".length);
+      const defaults = {
+        "/status": { progress: idle, aiProgress: idle, aiEnabled: true },
+        "/analyses": [saved],
+        [`/analyses/${id}`]: { ...saved, report },
+        [`/analyses/${secondId}`]: { ...saved, id: secondId, name: "Second batch", report: { ...report, jobs: [] } }
+      };
+      const value = Object.hasOwn(responses, path) ? responses[path] : defaults[path];
+      assert.notEqual(value, undefined, `Unexpected request: ${url}`);
+      const data = typeof value === "function" ? value(options) : value;
       return { ok: true, json: async () => ({ data }) };
     }
   });
   vm.runInContext(await readFile(new URL("./public/jd.js", import.meta.url), "utf8"), context);
   await context.window.JdView.open(container);
-  return { container, context, requests, nodes, timers };
+  return { container, context, requests, nodes, timers, downloads };
 }
 
-test("JD view hides imported pages and escapes job titles, technology names and evidence", async () => {
-  const { container } = await browser();
-  assert.doesNotMatch(container.innerHTML, /jd-screenshots|Imported OCR source documents|Group pages into a real job/);
-  assert.match(container.innerHTML, /&lt;Python&gt;/);
-  assert.match(container.innerHTML, /&lt;script&gt;evidence/);
-  assert.doesNotMatch(container.innerHTML, /<script>|<img src=x|<b>Architect/);
-  assert.match(container.innerHTML, /not a market-wide forecast/);
-  assert.match(container.innerHTML, /Draft/);
-  assert.match(container.innerHTML, /Technology area ranking/);
-  assert.match(container.innerHTML, /#1/);
+test("history replaces cumulative analysis with clickable date-stamped unique IDs", async () => {
+  const { container, requests } = await browser({ responses: { "/analyses": [saved, { ...saved, id: secondId }] } });
+  assert.match(container.innerHTML, new RegExp(`href="#jd/${id}"`));
+  assert.match(container.innerHTML, new RegExp(`JD-20261031-${id}`));
+  assert.match(container.innerHTML, new RegExp(`JD-20261031-${secondId}`));
+  assert.match(container.innerHTML, /&lt;October batch&gt;/);
+  assert.doesNotMatch(container.innerHTML, /Cumulative collection \(live\)|id="jd-demand"|id="jd-roadmap"|Import and analyze screenshots|id="jd-html-upload"|jd-analysis-select/);
+  assert.deepEqual(requests.map((r) => r.url).sort(), ["/api/jd/analyses", "/api/jd/status"]);
 });
 
-test("database failure is displayed as an escaped actionable error", async () => {
+test("empty history and unfinished runs do not open reports", async () => {
+  const empty = await browser({ responses: { "/analyses": [] } });
+  assert.match(empty.container.innerHTML, /No saved analyses yet/);
+  const failed = await browser({ responses: { "/analyses": [{ ...saved, hasReport: false, state: "failed" }] } });
+  assert.match(failed.container.innerHTML, new RegExp(`JD-20261031-${id}`));
+  assert.doesNotMatch(failed.container.innerHTML, new RegExp(`href="#jd/${id}"`));
+});
+
+test("direct ID routes open only the frozen report and preserve escaping and learning sections", async () => {
+  const { container, requests } = await browser({ hash: `#jd/${id}` });
+  assert.match(container.innerHTML, /All saved analyses/);
+  assert.match(container.innerHTML, /aria-current="page"/);
+  assert.match(container.innerHTML, /&lt;Python&gt;/);
+  assert.match(container.innerHTML, /&lt;script&gt;evidence/);
+  assert.doesNotMatch(container.innerHTML, /<script>|<b>Architect|id="jd-filters"/);
+  assert.match(container.innerHTML, /Draft/);
+  assert.match(container.innerHTML, /Technology area ranking/);
+  assert.match(container.innerHTML, /Technology names and concepts by type/);
+  assert.match(container.innerHTML, /AI Platform Architect tool learning priorities/);
+  assert.match(container.innerHTML, /AI Solution Architect tool learning priorities/);
+  assert.match(container.innerHTML, /Minimum job-ready path/);
+  assert.equal((container.innerHTML.match(/class="jd-roadmap-month"/g) ?? []).length, 24);
+  assert.equal((container.innerHTML.match(/class="jd-roadmap-bucket"/g) ?? []).length, 3);
+  assert.equal(requests.length, 3);
+});
+
+test("route changes and reloads open the correct report and returning to history hides results", async () => {
+  const { container, context } = await browser({ hash: `#jd/${id}` });
+  context.location.hash = `#jd/${secondId}`;
+  await context.window.JdView.open(container);
+  assert.match(container.innerHTML, /Analysis: Second batch/);
+  assert.match(container.innerHTML, /No jobs saved yet/);
+  await context.window.JdView.open(container);
+  assert.match(container.innerHTML, /Analysis: Second batch/);
+  context.location.hash = "#jd";
+  await context.window.JdView.open(container);
+  assert.doesNotMatch(container.innerHTML, /id="jd-demand"/);
+});
+
+test("unavailable reports display actionable escaped errors", async () => {
   const { container } = await browser({ failure: "Set JD_DATABASE_URL <now>" });
   assert.match(container.innerHTML, /role="alert"/);
   assert.match(container.innerHTML, /Set JD_DATABASE_URL &lt;now&gt;/);
   assert.match(container.innerHTML, /Try again/);
+  const unfinished = await browser({ hash: `#jd/${id}`, responses: { [`/analyses/${id}`]: { ...saved, report: null } } });
+  assert.match(unfinished.container.innerHTML, /no completed report/);
 });
 
-test("stale JD response never overwrites a different learning route", async () => {
-  const { container, context } = await browser();
-  context.location.hash = "#path";
-  await context.window.JdView.open(container);
-  assert.equal(container.innerHTML, '<section class="panel empty" role="status">Loading JD Intelligence...</section>');
-});
-
-test("JD view exposes zero-touch AI import", async () => {
-  const { container } = await browser();
-  assert.match(container.innerHTML, /Run AI import/);
-  assert.match(container.innerHTML, /combined OCR document per folder/);
-  assert.match(container.innerHTML, /id="jd-folder" type="file" webkitdirectory multiple/);
-  assert.match(container.innerHTML, /Upload folder and extract text/);
-  assert.doesNotMatch(container.innerHTML, /<h2>2\.|<h2>3\.|Create draft from selection/);
-});
-
-test("folder upload sends every supported image with its relative path before starting OCR", async () => {
-  const { container, requests, nodes } = await browser();
-  const files = [
-    { name: "one.png", webkitRelativePath: "New Job/one.png", size: 10 },
-    { name: "two.JPG", webkitRelativePath: "New Job/pages/two.JPG", size: 20 },
-    { name: "notes.txt", webkitRelativePath: "New Job/notes.txt", size: 5 }
-  ];
-  nodes.get("#jd-folder").files = files;
-  const button = nodes.get("#jd-upload");
-  button.id = "jd-upload";
-  await container.onclick({ target: { closest: () => button } });
-  const uploads = requests.filter((request) => request.url.startsWith("/api/jd/upload?"));
-  assert.equal(uploads.length, 2);
-  assert.equal(uploads[0].url, `/api/jd/upload?path=${encodeURIComponent(files[0].webkitRelativePath)}`);
-  assert.equal(uploads[1].options.body, files[1]);
-  assert.equal(requests.filter((request) => request.url === "/api/jd/import").length, 1);
-  assert.ok(requests.indexOf(uploads[1]) < requests.findIndex((request) => request.url === "/api/jd/import"));
-});
-
-test("folder upload failures are displayed and OCR is not started", async () => {
-  const { container, requests, nodes } = await browser({ uploadFailure: "The image could not be saved." });
-  nodes.get("#jd-folder").files = [{ name: "one.png", webkitRelativePath: "Job/one.png", size: 10 }];
-  const button = nodes.get("#jd-upload");
-  button.id = "jd-upload";
-  await container.onclick({ target: { closest: () => button } });
-  assert.equal(nodes.get("#jd-message").textContent, "The image could not be saved.");
-  assert.equal(requests.some((request) => request.url === "/api/jd/import"), false);
-  assert.equal(button.disabled, false);
-});
-
-test("URL-file upload posts text once, starts AI without OCR and locks import controls", async () => {
-  const started = { state: "running", sourceType: "urls", total: 1, processed: 0, jobs: 0, skipped: 1, failed: 0, errors: [] };
-  const { container, requests, nodes } = await browser({ responses: { "/naukri-import": started } });
-  assert.match(container.innerHTML, /Upload URL list and analyze/);
-  assert.match(container.innerHTML, /id="jd-url-file" type="file" accept=".txt,text\/plain"/);
-  const text = "1.\nhttps://www.naukri.com/job-listings-ai-architect-181026003829";
-  nodes.get("#jd-url-file").files = [{ name: "jobs.txt", size: text.length, text: async () => text }];
-  const button = nodes.get("#jd-url-upload");
-  button.id = "jd-url-upload";
-  await container.onclick({ target: { closest: () => button } });
-  const posts = requests.filter((request) => request.options.method === "POST");
+test("New analysis posts a named batch, locks controls and routes to its completed report", async () => {
+  const started = { ...idle, state: "running", analysisId: id, sourceType: "html", total: 1 };
+  let status = { progress: idle, aiProgress: idle };
+  const { container, nodes, requests, timers, context } = await browser({ responses: {
+    "/analyses": (options) => options.method === "POST" ? started : [saved],
+    "/status": () => status
+  } });
+  nodes.get("#jd-analysis-name").value = "New batch";
+  nodes.get("#jd-analysis-files").files = [{ name: "one.html", size: 20, text: async () => "<h1>One</h1>" }];
+  await container.onsubmit({ preventDefault() {}, target: { id: "jd-new-form" } });
+  const posts = requests.filter((r) => r.options.method === "POST");
   assert.equal(posts.length, 1);
-  assert.equal(posts[0].url, "/api/jd/naukri-import");
-  assert.equal(JSON.parse(posts[0].options.body).text, text);
-  for (const id of ["jd-upload", "jd-import", "jd-ai-import", "jd-url-upload", "jd-url-file"]) assert.equal(nodes.get(`#${id}`).disabled, true, id);
-  assert.match(nodes.get("#jd-ai-progress").textContent, /URLs processed/);
-  assert.match(nodes.get("#jd-ai-progress").textContent, /1 duplicate URLs skipped/);
+  assert.deepEqual(JSON.parse(posts[0].options.body), { name: "New batch", files: [{ name: "one.html", html: "<h1>One</h1>" }] });
+  assert.equal(nodes.get("#jd-analysis-generate").disabled, true);
+  status = { progress: idle, aiProgress: { ...started, state: "completed", processed: 1 } };
+  await timers.pop()();
+  assert.equal(context.location.hash, `#jd/${id}`);
 });
 
-test("URL-file validation and read failures show an error without starting an import", async () => {
-  for (const file of [
-    null, { name: "jobs.csv", size: 1 }, { name: "jobs.txt", size: 256 * 1024 + 1 },
-    { name: "jobs.txt", size: 1, text: async () => { throw new Error("Cannot read selected file."); } }
-  ]) {
+test("New analysis validates HTML files and surfaces read failures without posting", async () => {
+  for (const files of [[], [{ name: "bad.txt", size: 1 }], [{ name: "big.html", size: 2 * 1024 * 1024 + 1 }],
+    [{ name: "bad.html", size: 1, text: async () => { throw new Error("Read failed"); } }]]) {
     const { container, nodes, requests } = await browser();
-    nodes.get("#jd-url-file").files = file ? [file] : [];
-    const button = nodes.get("#jd-url-upload");
-    button.id = "jd-url-upload";
-    await container.onclick({ target: { closest: () => button } });
+    nodes.get("#jd-analysis-name").value = "New batch";
+    nodes.get("#jd-analysis-files").files = files;
+    await container.onsubmit({ preventDefault() {}, target: { id: "jd-new-form" } });
     assert.ok(nodes.get("#jd-message").textContent);
-    assert.equal(requests.some((request) => request.options.method === "POST"), false);
-    assert.equal(button.disabled, false);
+    assert.equal(requests.some((r) => r.options.method === "POST"), false);
+    assert.equal(nodes.get("#jd-analysis-generate").disabled, false);
   }
 });
 
-test("URL import polling refreshes jobs and demand and preserves escaped per-URL errors", async () => {
-  const started = { state: "running", sourceType: "urls", total: 2, processed: 0, jobs: 0, skipped: 0, failed: 0, errors: [] };
-  let nextStatus = {
-    progress: { state: "idle", total: 0, processed: 0, imported: 0, skipped: 0, failed: 0, errors: [] },
-    aiProgress: { state: "idle", total: 0, processed: 0, jobs: 0, failed: 0, errors: [] },
-    categories: ["Languages"], roles: ["ai-architect"], aiEnabled: true
-  };
-  const { container, nodes, requests, timers } = await browser({ responses: { "/naukri-import": started, "/status": () => nextStatus } });
-  nodes.get("#jd-url-file").files = [{ name: "jobs.txt", size: 1, text: async () => "url" }];
-  const button = nodes.get("#jd-url-upload");
-  button.id = "jd-url-upload";
+test("New analysis automatically fills a read-only timestamped name and focuses file selection", async () => {
+  const { container, nodes } = await browser();
+  assert.match(container.innerHTML, /id="jd-analysis-name" readonly value="JD analysis \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} UTC"/);
+  await container.onclick({ target: { closest: () => ({ id: "jd-new", dataset: {} }) } });
+  assert.match(nodes.get("#jd-analysis-name").value, /^JD analysis \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} UTC$/);
+  assert.equal(nodes.get("#jd-new-form").hidden, false);
+});
+
+test("master catalogue searches aliases, retains selection and copies canonical names", async () => {
+  const { container, nodes, context } = await browser({ hash: `#jd/${id}` });
+  const search = nodes.get("#jd-master-search");
+  search.id = "jd-master-search";
+  const click = async (id) => container.onclick({ target: { closest: () => ({ id, dataset: {} }) } });
+  search.value = "Azure Kubernetes";
+  container.oninput({ target: search });
+  assert.match(nodes.get("#jd-master-table").innerHTML, /AKS/);
+  assert.doesNotMatch(nodes.get("#jd-master-table").innerHTML, /PostgreSQL/);
+  await click("jd-master-select");
+  search.value = "Postgres";
+  container.oninput({ target: search });
+  await click("jd-master-select");
+  await click("jd-master-copy");
+  assert.equal(context.copiedText, "AKS\nPostgreSQL\n");
+});
+
+test("all three PDF buttons download the selected saved analysis", async () => {
+  const { container, requests, downloads } = await browser({ hash: `#jd/${id}` });
+  for (const type of ["ai-platform-architect", "ai-architect", "roadmap"]) {
+    assert.match(container.innerHTML, new RegExp(`data-pdf-type="${type}"`));
+    const button = { dataset: { pdfType: type }, disabled: false };
+    await container.onclick({ target: { closest: () => button } });
+    assert.equal(button.disabled, false);
+    assert.ok(requests.some((r) => r.url === `/api/jd/analyses/${id}/pdf/${type}`));
+    assert.equal(downloads.at(-1).filename, `JD-20261031-${id}-${type}.pdf`);
+  }
+});
+
+test("PDF failures are visible and re-enable the download button", async () => {
+  const { container, downloads, nodes } = await browser({ hash: `#jd/${id}`, pdfFailure: "PDF generation failed." });
+  const button = { dataset: { pdfType: "roadmap" }, disabled: false };
   await container.onclick({ target: { closest: () => button } });
-  nextStatus = { ...nextStatus, aiProgress: { ...started, state: "completed-with-errors", processed: 2, jobs: 1, failed: 1,
-    errors: [{ sourcePath: "<bad-url>", message: "<script>Blocked</script>" }] } };
-  await timers.pop()();
-  assert.equal(requests.filter((request) => request.url === "/api/jd/jobs").length, 2);
-  assert.equal(requests.filter((request) => request.url === "/api/jd/demand").length, 2);
-  assert.match(nodes.get("#jd-import-errors").innerHTML, /&lt;script&gt;Blocked/);
-  assert.doesNotMatch(nodes.get("#jd-import-errors").innerHTML, /<script>/);
-  assert.match(nodes.get("#jd-message").textContent, /refreshed/);
+  assert.equal(nodes.get("#jd-message").textContent, "PDF generation failed.");
   assert.equal(button.disabled, false);
+  assert.equal(downloads.length, 0);
+});
+
+test("saved-collection snapshot clearly shows original role counts and does not generate analysis on open", async () => {
+  const snapshot = { ...report, scope: "saved-collection", recommendations: [
+    { ...report.recommendations[0], totalJobs: 7 }, { ...report.recommendations[1], totalJobs: 13 }
+  ] };
+  const { container, requests, context } = await browser({ hash: `#jd/${id}`, responses: { [`/analyses/${id}`]: { ...saved, report: snapshot } } });
+  assert.match(container.innerHTML, /Original saved-collection snapshot/);
+  assert.match(container.innerHTML, /AI Platform Architect: 7/);
+  assert.match(container.innerHTML, /AI Solution Architect: 13/);
+  assert.match(container.innerHTML, /does not rerun AI/);
+  await context.window.JdView.open(container);
+  assert.ok(requests.every((r) => r.options.method === "GET"));
+  assert.ok(requests.every((r) => !r.url.includes("/demand") && !r.url.includes("/recommendations")));
 });

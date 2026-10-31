@@ -4,19 +4,23 @@ import { extname, join, sep } from "node:path";
 import { JdError, importScreenshots, isUuid, categories, roles } from "./jd.mjs";
 import { AzureJdProcessor } from "./jd-ai.mjs";
 import { parseNaukriList, importNaukriJobs } from "./jd-naukri.mjs";
+import { validateHtmlBatch, importHtmlJobs } from "./jd-html.mjs";
+import { platformLearningRoadmap } from "./jd-roadmap.mjs";
+import { createAnalysis, runAnalysis } from "./jd-analysis.mjs";
+import { generateAnalysisPdf, pdfTypes } from "./jd-pdf.mjs";
 
 function send(response, status, value) {
   response.writeHead(status, { "content-type": "application/json", "cache-control": "no-store" });
   response.end(JSON.stringify(value));
 }
 
-async function jsonBody(request) {
+async function jsonBody(request, maximum = 1024 * 1024) {
   if (!/^application\/json(?:;|$)/i.test(request.headers["content-type"] ?? "")) throw new JdError("Use application/json.", 415);
   let length = 0;
   const chunks = [];
   for await (const chunk of request) {
     length += chunk.length;
-    if (length > 1024 * 1024) throw new JdError("Request is too large (maximum 1 MB).", 413);
+    if (length > maximum) throw new JdError(`Request is too large (maximum ${maximum / 1024 / 1024} MB).`, 413);
     chunks.push(chunk);
   }
   try { return JSON.parse(Buffer.concat(chunks).toString("utf8")); }
@@ -69,6 +73,7 @@ export function createJdApi(store, config) {
   let importing = null;
   let aiProgress = { state: "idle", total: 0, processed: 0, jobs: 0, failed: 0, errors: [] };
   let aiImporting = null;
+  let generatingPdf = false;
   const aiProcessor = new AzureJdProcessor(store, config);
   const handler = async (request, response, url) => {
     try {
@@ -83,6 +88,48 @@ export function createJdApi(store, config) {
       if (route === "/status" && request.method === "GET") {
         await store.pool.query("SELECT 1 FROM jd_screenshots LIMIT 1");
         send(response, 200, { data: { progress, aiProgress, aiEnabled: aiProcessor.enabled(), categories, roles } });
+      } else if (route === "/analyses" && request.method === "GET") {
+        send(response, 200, { data: (await store.pool.query("SELECT id,name,state,created_at AS \"createdAt\",report IS NOT NULL AS \"hasReport\" FROM jd_analyses ORDER BY created_at DESC,id DESC")).rows });
+      } else if (/^\/analyses\/[^/]+\/pdf\/[^/]+$/.test(route) && request.method === "GET") {
+        const [, , id, , type] = route.split("/");
+        if (!isUuid(id)) throw new JdError("Invalid analysis ID.");
+        if (!pdfTypes.includes(type)) throw new JdError("Unknown PDF report type.");
+        if (generatingPdf) throw new JdError("Another PDF is being generated. Please retry shortly.", 409);
+        const result = await store.pool.query("SELECT id,name,created_at AS \"createdAt\",report,progress FROM jd_analyses WHERE id=$1", [id]);
+        if (!result.rowCount) throw new JdError("Analysis not found.", 404);
+        generatingPdf = true;
+        try {
+          const { filename, buffer } = await generateAnalysisPdf(result.rows[0], type);
+          response.writeHead(200, { "content-type": "application/pdf", "content-disposition": `attachment; filename="${filename}"`, "cache-control": "no-store" });
+          response.end(buffer);
+        } catch (error) {
+          if (error instanceof JdError) throw error;
+          console.error("JD PDF generation failed:", error.message);
+          throw new JdError("PDF generation failed. Check server logs and the Playwright Chromium installation, then retry.", 503);
+        } finally {
+          generatingPdf = false;
+        }
+      } else if (/^\/analyses\/[^/]+$/.test(route) && request.method === "GET") {
+        const id = route.split("/")[2];
+        if (!isUuid(id)) throw new JdError("Invalid analysis ID.");
+        const result = await store.pool.query("SELECT id,name,state,created_at AS \"createdAt\",report,progress FROM jd_analyses WHERE id=$1", [id]);
+        if (!result.rowCount) throw new JdError("Analysis not found.", 404);
+        send(response, 200, { data: result.rows[0] });
+      } else if (route === "/analyses" && request.method === "POST") {
+        if (importing || aiImporting) throw new JdError("An import is already running.", 409);
+        const input = await jsonBody(request, 20 * 1024 * 1024);
+        const files = validateHtmlBatch(input?.files);
+        if (!aiProcessor.enabled()) throw new JdError("Configure Azure OpenAI to generate new analyses.", 503);
+        const id = await createAnalysis(store, input.name);
+        aiProgress = { state: "running", sourceType: "html", analysisId: id, total: files.length, processed: 0, jobs: 0, reused: 0, skipped: 0, duplicates: [], failed: 0, errors: [] };
+        aiImporting = runAnalysis(store, aiProcessor, files, aiProgress, id).catch((error) => {
+          console.error("JD analysis persistence failed:", error.message);
+          aiProgress.state = "failed";
+          aiProgress.errors.push({ message: "Could not persist analysis results. Check database access." });
+        }).finally(() => { aiImporting = null; });
+        send(response, 202, { data: aiProgress });
+      } else if (route === "/technologies" && request.method === "GET") {
+        send(response, 200, { data: await store.technologyMasterList() });
       } else if (route === "/upload" && request.method === "POST") {
         if (importing || aiImporting) throw new JdError("Wait for the current import before uploading images.", 409);
         try {
@@ -107,6 +154,18 @@ export function createJdApi(store, config) {
           progress.errors.push({ message: error.message });
         }).finally(() => { importing = null; });
         send(response, 202, { data: progress });
+      } else if (route === "/html-import" && request.method === "POST") {
+        if (importing || aiImporting) throw new JdError("An import is already running.", 409);
+        const files = validateHtmlBatch((await jsonBody(request, 20 * 1024 * 1024))?.files);
+        if (!aiProcessor.enabled()) throw new JdError("Configure AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY and AZURE_OPENAI_DEPLOYMENT to use AI import.", 503);
+        await store.pool.query("SELECT source_content_hash FROM job_descriptions LIMIT 1");
+        aiProgress = { state: "running", sourceType: "html", total: files.length, processed: 0, jobs: 0, skipped: 0, duplicates: [], failed: 0, errors: [] };
+        aiImporting = importHtmlJobs(aiProcessor, store, files, aiProgress).catch((error) => {
+          console.error("Saved HTML JD import failed:", error.message);
+          aiProgress.state = "failed";
+          aiProgress.errors.push({ message: "Saved HTML import failed. Check server logs for details." });
+        }).finally(() => { aiImporting = null; });
+        send(response, 202, { data: aiProgress });
       } else if (route === "/naukri-import" && request.method === "POST") {
         const input = await jsonBody(request);
         const { urls, skipped } = parseNaukriList(input?.text);
@@ -167,6 +226,13 @@ export function createJdApi(store, config) {
         const input = await jsonBody(request);
         if (!input || typeof input.text !== "string" || !input.text.trim() || input.text.length > 100000) throw new JdError("Provide JD text (1 to 100000 characters).");
         send(response, 200, { data: await store.suggest(input.text) });
+      } else if (route === "/roadmap" && request.method === "GET") {
+        const filters = new URLSearchParams(url.searchParams);
+        filters.set("role", "ai-platform-architect");
+        const demand = await store.demand(filters, true);
+        send(response, 200, { data: platformLearningRoadmap({ totalJobs: demand.totalJobs, tools: demand.recommendedTools }) });
+      } else if (route === "/recommendations" && request.method === "GET") {
+        send(response, 200, { data: await store.toolRecommendations(url.searchParams) });
       } else if (route === "/demand" && request.method === "GET") {
         send(response, 200, { data: await store.demand(url.searchParams) });
       } else {

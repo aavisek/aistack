@@ -127,10 +127,43 @@ test("JD PostgreSQL and HTTP integration", { skip: !config.testDatabaseUrl }, as
       const filtered = (await request("/demand?role=ai-platform-architect&from=2026-10-01&to=2026-10-31")).data;
       assert.equal(filtered.totalJobs, 1);
       assert.equal(filtered.technologies[0].share, 100);
+      assert.equal(filtered.technologyBreakdown.find((item) => item.name === "Python").share, 100);
+      assert.equal(filtered.technologyBreakdown.find((item) => item.name === "Python").type, "Languages");
+      assert.equal(filtered.technologyBreakdown.length, filtered.technologies.length);
       assert.equal(filtered.learningPlan.length, 4);
       const empty = (await request("/demand?role=ai-architect")).data;
       assert.equal(empty.totalJobs, 0);
       assert.deepEqual(empty.technologies, []);
+      assert.deepEqual(empty.technologyBreakdown, []);
+      const master = await request("/technologies");
+      assert.equal(master.status, 200);
+      assert.ok(master.data.some((item) => item.name === "LangSmith" && item.jobCount === 0));
+      assert.equal(master.data.some((item) => item.name === "NewTechX"), false);
+      assert.equal(master.data.some((item) => item.name === "RAG"), false);
+      assert.ok(master.data.some((item) => item.name === "Python" && item.jobCount > 0));
+      const recommendations = await request("/recommendations?role=other&from=2026-10-01&to=2026-10-31");
+      assert.equal(recommendations.status, 200);
+      const platform = recommendations.data.find((item) => item.role === "ai-platform-architect");
+      const solution = recommendations.data.find((item) => item.role === "ai-architect");
+      assert.equal(platform.totalJobs, 1);
+      assert.equal(platform.tools.find((item) => item.name === "Python").share, 100);
+      assert.equal(platform.tools.some((item) => item.name === "RAG"), false);
+      assert.equal(solution.title, "AI Solution Architect");
+      assert.equal(solution.totalJobs, 0);
+      assert.deepEqual(solution.tools, []);
+      const emptyRecommendations = await request("/recommendations?from=2027-01-01");
+      assert.ok(emptyRecommendations.data.every((item) => item.totalJobs === 0 && !item.tools.length));
+      assert.equal((await request("/recommendations?from=2026-12-01&to=2026-01-01")).status, 400);
+      const roadmap = await request("/roadmap?role=other&from=2026-10-01&to=2026-10-31");
+      assert.equal(roadmap.status, 200);
+      assert.equal(roadmap.data.role, "ai-platform-architect");
+      assert.equal(roadmap.data.reviewedJobs, 1);
+      assert.equal(roadmap.data.months.length, 24);
+      assert.equal(roadmap.data.minimumToolkit.find((tool) => tool.name === "Python").share, 100);
+      const emptyRoadmap = await request("/roadmap?from=2027-01-01");
+      assert.equal(emptyRoadmap.data.reviewedJobs, 0);
+      assert.equal(emptyRoadmap.data.months.length, 24);
+      assert.equal((await request("/roadmap?from=2026-12-01&to=2026-01-01")).status, 400);
       assert.equal((await request("/demand?from=2026-12-01&to=2026-01-01")).status, 400);
     });
     await t.test("page conflicts and validation failures are transactional", async () => {
@@ -142,8 +175,17 @@ test("JD PostgreSQL and HTTP integration", { skip: !config.testDatabaseUrl }, as
       assert.equal((await request("/jobs/not-a-uuid")).status, 400);
     });
     await t.test("drafting a reviewed job removes it from demand and releases removed pages", async () => {
+      await store.pool.query("UPDATE job_descriptions SET body=body || ' Terraform and LangSmith are required.' WHERE id=$1", [id]);
+      const before = await request("/recommendations");
+      const platform = before.data.find((item) => item.role === "ai-platform-architect");
+      assert.equal(platform.tools.find((item) => item.name === "Terraform").jobCount, 1);
+      assert.equal(platform.tools.find((item) => item.name === "LangSmith").share, 100);
+      assert.equal((await store.job(id)).technologies.some((item) => item.name === "Terraform"), false);
+      const master = await request("/technologies");
+      assert.equal(master.data.find((item) => item.name === "Terraform").jobCount, 1);
       await request(`/jobs/${id}`, "PUT", input({ reviewed: false }));
       assert.equal((await request("/demand?role=ai-platform-architect")).data.totalJobs, 0);
+      assert.deepEqual((await request("/recommendations")).data.find((item) => item.role === "ai-platform-architect").tools, []);
       assert.ok((await store.screenshots()).every((page) => page.jobId === null));
     });
     await t.test("AI reruns update an existing job when its page set grows", async () => {
@@ -186,6 +228,100 @@ test("JD PostgreSQL and HTTP integration", { skip: !config.testDatabaseUrl }, as
       assert.deepEqual(saved.data.screenshotIds, []);
       const screenshotJob = (await store.aiJobs()).find((job) => job.sourceFolder === "Example Job");
       assert.deepEqual((await store.job(screenshotJob.id)).screenshotIds, screenshotIds);
+    });
+    await t.test("import deduplication rejects matching IDs and hashes without overwriting existing jobs", async () => {
+      const sourceUrl = "https://www.naukri.com/job-listings-architect-example-291026029686";
+      const input = {
+        sourceUrl, sourceFolder: null, screenshotIds: [], title: "Original", company: "Example",
+        roleFamily: "ai-architect", body: "Python is required.", confidence: 1, rejectDuplicate: true,
+        sourceContentHash: "test-document-hash",
+        technologies: [{ name: "Python", category: "Languages", requirement: "required", evidence: "Python is required.", confidence: 1 }]
+      };
+      const before = (await store.jobs()).length;
+      const first = await store.saveAiJob(input);
+      assert.equal(await store.hasImportedJob(`${sourceUrl}?src=cluster`), true);
+      assert.equal(await store.hasImportedJob(sourceUrl.replace("291026029686", "161026021479"), input.sourceContentHash), true);
+      await assert.rejects(store.saveAiJob({ ...input, title: "Changed", sourceContentHash: "changed" }), /Duplicate JD/);
+      await assert.rejects(store.saveAiJob({ ...input, sourceUrl: sourceUrl.replace("291026029686", "161026021479") }), /Duplicate JD/);
+      assert.equal((await store.job(first.id)).title, "Original");
+      assert.equal((await store.jobs()).length, before + 1);
+      const concurrent = { ...input, sourceUrl: sourceUrl.replace("291026029686", "161026021479"), sourceContentHash: "concurrent-test" };
+      const results = await Promise.allSettled([store.saveAiJob(concurrent), store.saveAiJob(concurrent)]);
+      assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
+      assert.equal(results.filter((result) => result.status === "rejected").length, 1);
+    });
+    await t.test("batch analyses reuse jobs, scope denominators and freeze previous reports", {skip:process.env.JD_HTML_BROWSER_TEST !== "1"}, async () => {
+      const {createAnalysis,runAnalysis}=await import("./jd-analysis.mjs");
+      let calls=0;
+      const processor={analyzeText:async(_,text)=>{
+        calls++;
+        return {title:"Batch Platform",company:"Example",roleFamily:"ai-platform-architect",sourceText:text,
+          confidence:1,requirements:[{name:"Python",category:"Languages",requirement:"required",evidence:"Python",confidence:1}]};
+      }};
+      const file={name:"batch.html",html:`<link rel="canonical" href="https://www.naukri.com/job-listings-batch-test-111111111111"><h1 class="jd-header-title">Platform</h1><div class="job-desc-container"><div><h2>Job description</h2></div><div>Python is required.</div></div>`};
+      const progress=()=>({state:"running",total:1,processed:0,jobs:0,reused:0,failed:0,skipped:0,errors:[]});
+      const first=await createAnalysis(store,"First");
+      const p1=progress();await runAnalysis(store,processor,[file],p1,first);
+      assert.equal(p1.jobs,1);assert.equal(calls,1);
+      const before=(await store.pool.query("SELECT report FROM jd_analyses WHERE id=$1",[first])).rows[0].report;
+      assert.equal(before.demand.totalJobs,1);assert.equal(before.previous,null);
+      const second=await createAnalysis(store,"Second");
+      const p2=progress();await runAnalysis(store,processor,[file,file],p2,second);
+      assert.equal(calls,1);assert.equal(p2.reused,2);
+      const report=(await store.pool.query("SELECT report FROM jd_analyses WHERE id=$1",[second])).rows[0].report;
+      assert.equal(report.jobs.length,1);assert.equal(report.demand.totalJobs,1);
+      assert.equal(report.previous.id,first);
+      const history = await request("/analyses");
+      const detail = await request(`/analyses/${second}`);
+      assert.equal(detail.status, 200);
+      assert.equal(detail.data.id, second);
+      assert.equal(detail.data.createdAt, history.data.find((item) => item.id === second).createdAt);
+      assert.deepEqual(detail.data.report, report);
+      assert.equal((await request("/analyses/invalid")).status, 400);
+      assert.equal((await request(`/analyses/${randomUUID()}`)).status, 404);
+      const pdf = await fetch(`${base}/analyses/${second}/pdf/ai-platform-architect`);
+      assert.equal(pdf.status, 200);
+      assert.equal(pdf.headers.get("content-type"), "application/pdf");
+      assert.match(pdf.headers.get("content-disposition"), new RegExp(`${second}-ai-platform-architect.pdf`));
+      assert.equal(Buffer.from(await pdf.arrayBuffer()).subarray(0, 5).toString(), "%PDF-");
+      assert.equal((await request(`/analyses/${second}/pdf/invalid`)).status, 400);
+      assert.equal((await request(`/analyses/${randomUUID()}/pdf/roadmap`)).status, 404);
+      const unfinished = await createAnalysis(store, "Unfinished");
+      assert.equal((await request(`/analyses/${unfinished}/pdf/roadmap`)).status, 409);
+      assert.ok(report.trends.every(row=>row.change===0));
+      await store.pool.query("UPDATE job_descriptions SET body='Changed' WHERE id=$1",[report.jobs[0].id]);
+      assert.deepEqual((await store.pool.query("SELECT report FROM jd_analyses WHERE id=$1",[first])).rows[0].report,before);
+    });
+    await t.test("saved-collection snapshot retains database mentions, all jobs and role counts without changing jobs or old reports", async () => {
+      const { snapshotSavedJobs } = await import("./jd-analysis.mjs");
+      const databaseJob = await request("/jobs", "POST", input({
+        title: "Snapshot database platform", body: "PostgreSQL and Qdrant are required.",
+        technologies: [
+          { name: "PostgreSQL", category: "Data and retrieval", requirement: "required" },
+          { name: "Qdrant", category: "Data and retrieval", requirement: "required" }
+        ]
+      }));
+      assert.equal(databaseJob.status, 201);
+      const originalJobs = (await store.pool.query("SELECT * FROM job_descriptions ORDER BY id")).rows;
+      const originalReports = (await store.pool.query("SELECT id,report FROM jd_analyses ORDER BY id")).rows;
+      const liveDemand = await store.demand(new URLSearchParams());
+      const liveRoles = await store.toolRecommendations(new URLSearchParams());
+      const id = await snapshotSavedJobs(store, "Original saved collection");
+      const { data } = await request(`/analyses/${id}`);
+      assert.equal(data.state, "completed");
+      assert.equal(data.report.scope, "saved-collection");
+      assert.equal(data.report.previous, null);
+      assert.equal(data.report.jobs.length, originalJobs.length);
+      assert.equal(data.report.demand.totalJobs, liveDemand.totalJobs);
+      assert.deepEqual(data.report.recommendations, liveRoles);
+      for (const name of ["PostgreSQL", "Qdrant"]) {
+        assert.ok(data.report.demand.technologyBreakdown.some((item) => item.name === name && item.jobCount > 0));
+        assert.ok(data.report.technologies.some((item) => item.name === name && item.jobCount > 0));
+      }
+      assert.deepEqual((await store.pool.query("SELECT * FROM job_descriptions ORDER BY id")).rows, originalJobs);
+      assert.deepEqual((await store.pool.query("SELECT id,report FROM jd_analyses WHERE id<>$1 ORDER BY id", [id])).rows, originalReports);
+      await request(`/analyses/${id}`);
+      assert.deepEqual((await request(`/analyses/${id}`)).data.report, data.report);
     });
     await t.test("HTTP rejects malformed JSON, cross-origin writes, oversized bodies and invalid methods", async () => {
       assert.equal((await request("/jobs", "POST", input(), { origin: "https://untrusted.example" })).status, 403);

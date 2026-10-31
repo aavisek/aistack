@@ -1,4 +1,7 @@
 import { JdError } from "./jd.mjs";
+import { createHash } from "node:crypto";
+
+class NaukriRenderingRequiredError extends JdError {}
 
 export function naukriUrl(value) {
   let url;
@@ -71,9 +74,8 @@ export function extractNaukriJob(html) {
     catch { throw new JdError("Naukri returned invalid structured job data. Upload screenshots or paste the JD text instead.", 422); }
     visit(structured);
   }
-  if (postings.length !== 1) {
-    throw new JdError("No single readable job description was found. Naukri may require login, JavaScript or a CAPTCHA, or the job may have expired. Upload screenshots or paste the JD text instead.", 422);
-  }
+  if (!postings.length) throw new NaukriRenderingRequiredError("No readable structured job description was found. Browser rendering is required.", 422);
+  if (postings.length !== 1) throw new JdError("Naukri returned multiple job descriptions. Upload screenshots or paste the JD text instead.", 422);
   const posting = postings[0];
   if (typeof posting.title !== "string" || typeof posting.description !== "string" || !plainText(posting.description)) {
     throw new JdError("Naukri returned incomplete job details. Upload screenshots or paste the JD text instead.", 422);
@@ -89,7 +91,12 @@ export function extractNaukriJob(html) {
   return lines.join("\n\n");
 }
 
-export async function fetchNaukriJob(value, fetchPage = fetch) {
+async function renderNaukriJob(url) {
+  const { renderNaukriJob: render } = await import("./jd-naukri-browser.mjs");
+  return render(url);
+}
+
+export async function fetchNaukriJob(value, fetchPage = fetch, renderPage = renderNaukriJob) {
   let url = naukriUrl(value);
   const signal = AbortSignal.timeout(20000);
   try {
@@ -122,7 +129,12 @@ export async function fetchNaukriJob(value, fetchPage = fetch) {
         if (length > 2 * 1024 * 1024) throw new JdError("Naukri page exceeds the 2 MB download limit.", 413);
         chunks.push(chunk);
       }
-      return extractNaukriJob(Buffer.concat(chunks).toString("utf8"));
+      try {
+        return extractNaukriJob(Buffer.concat(chunks).toString("utf8"));
+      } catch (error) {
+        if (!(error instanceof NaukriRenderingRequiredError)) throw error;
+        return await renderPage(url);
+      }
     }
   } catch (error) {
     if (error instanceof JdError) throw error;
@@ -133,21 +145,47 @@ export async function fetchNaukriJob(value, fetchPage = fetch) {
 export async function importNaukriJobs(processor, store, urls, progress) {
   for (const url of urls) {
     try {
+      if (await store.hasImportedJob(url)) {
+        progress.skipped = (progress.skipped ?? 0) + 1;
+        (progress.duplicates ??= []).push({ sourcePath: url, message: "Already saved: matching Naukri job ID." });
+        continue;
+      }
       const text = await fetchNaukriJob(url);
-      const analyzed = await processor.analyzeText(url, text, null, "Naukri");
-      if (analyzed.sourceText.length > 100000) throw new JdError("The analyzed JD and original source exceed 100000 characters. No partial job was saved.", 422);
-      await store.saveAiJob({
-        sourceUrl: url, sourceFolder: null, screenshotIds: [],
-        title: analyzed.title, company: analyzed.company, roleFamily: analyzed.roleFamily,
-        body: analyzed.sourceText, technologies: analyzed.requirements, confidence: analyzed.confidence
-      });
-      progress.jobs += 1;
+      await saveImportedDocument(processor, store, { sourceUrl: url, text, sourcePath: url }, progress);
     } catch (error) {
-      progress.failed += 1;
-      progress.errors.push({ sourcePath: url, message: error.message });
+      recordImportFailure(progress, url, error);
     } finally {
       progress.processed += 1;
     }
+
   }
   progress.state = progress.failed ? (progress.jobs ? "completed-with-errors" : "failed") : "completed";
+}
+
+export function documentHash(text) {
+  return createHash("sha256").update(text.normalize("NFKC").replace(/\s+/g, " ").trim()).digest("hex");
+}
+
+export function recordImportFailure(progress, sourcePath, error) {
+  if (error instanceof JdError && error.status === 409) {
+    progress.skipped = (progress.skipped ?? 0) + 1;
+    (progress.duplicates ??= []).push({ sourcePath, message: error.message });
+  } else {
+    progress.failed += 1;
+    progress.errors.push({ sourcePath, message: error.message });
+  }
+}
+
+export async function saveImportedDocument(processor, store, { sourceUrl, text, sourcePath }, progress) {
+  const sourceContentHash = documentHash(text);
+  if (await store.hasImportedJob(sourceUrl, sourceContentHash)) throw new JdError("Duplicate JD rejected: matching Naukri job ID or extracted document.", 409);
+  const analyzed = await processor.analyzeText(sourcePath, text, null, sourceUrl.includes("linkedin.com") ? "LinkedIn" : "Naukri");
+  if (analyzed.sourceText.length > 100000) throw new JdError("The analyzed JD and original source exceed 100000 characters. No partial job was saved.", 422);
+  const saved = await store.saveAiJob({
+    sourceUrl, sourceFolder: null, screenshotIds: [], sourceContentHash, rejectDuplicate: true,
+    title: analyzed.title, company: analyzed.company, roleFamily: analyzed.roleFamily,
+    body: analyzed.sourceText, technologies: analyzed.requirements, confidence: analyzed.confidence
+  });
+  progress.jobs += 1;
+  return saved;
 }

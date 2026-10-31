@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, writeFile, mkdir, symlink, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { extractTechnologies, validateJob, validateDate, findEvidence, listScreenshots, importScreenshots, recognizeScreenshot, learningPlan } from "./jd.mjs";
+import { extractTechnologies, validateJob, validateDate, findEvidence, listScreenshots, importScreenshots, recognizeScreenshot, learningPlan, technologyBreakdown, masterTechnologies, roleToolRecommendations, sourceToolMentions } from "./jd.mjs";
 import { AzureJdProcessor } from "./jd-ai.mjs";
 
 const sample = `Cloud: AWS (Bedrock, SageMaker, Lambda, API Gateway, S3), Azure (OpenAI Service, ML Studio, AKS), GCP (Vertex AI, Big Query, Cloud Storage).
@@ -12,6 +12,101 @@ AI Frameworks: TensorFlow, PyTorch, Hugging Face Transformers, Lang Chain.
 Data: SQL (PostgreSQL, MySQL), NoSQL (MongoDB, DynamoDB), vector databases (Pinecone, Weaviate) for RAG & semantic search.
 APIs: REST, GraphQL, WebSocket.
 Security: IAM, RBAC, GDPR, SOC2.`;
+
+test("recommendations recover exact source tools and composites without using corrected-only inventions", () => {
+  const jobs = [{
+    id: "one", title: "Platform",
+    body: "Invented Terraform and Pinecone.\n\n--- Original Naukri source document ---\n\nUse Node.js/TypeScript, Phoenix, LangSmith, Manage Engine, Vertex AI Agent Engine, Claude Code and API Gateway."
+  }, { id: "two", title: "Cloud", body: "Terraform, Step Functions, EventBridge and Kinesis." }];
+  const mentions = sourceToolMentions(jobs);
+  const tools = roleToolRecommendations({ totalJobs: 2, technologies: mentions });
+  for (const name of ["Node.js", "TypeScript", "Arize Phoenix", "LangSmith", "ManageEngine", "Vertex AI Agent Engine", "Claude Code", "Amazon API Gateway",
+    "Terraform", "AWS Step Functions", "Amazon EventBridge", "Amazon Kinesis"]) {
+    const tool = tools.find((item) => item.name === name);
+    assert.ok(tool, name);
+    assert.equal(tool.jobCount, 1, name);
+    assert.equal(tool.share, 50, name);
+  }
+  assert.equal(tools.some((item) => item.name === "Pinecone"), false);
+  assert.ok(tools.find((item) => item.name === "Terraform").evidence.every((item) => item.jobId === "two"));
+  assert.deepEqual(sourceToolMentions([{ id: "one", title: "Empty", body: "No tool requirements, only architecture." }]), []);
+});
+
+test("role tool recommendations rank exact names using unique evidence jobs and role-specific percentages", () => {
+  const mention = (name, jobs, category = "Other") => ({
+    name, category, evidence: jobs.map((jobId) => ({ jobId, title: jobId, evidence: name }))
+  });
+  const tools = roleToolRecommendations({ totalJobs: 3, technologies: [
+    mention("Postgres", ["one"]), mention("PostgreSQL", ["one", "two"]),
+    mention("Python", ["two"], "Languages"), mention("AKS", ["three"], "Cloud platforms"),
+    mention("RAG", ["one", "two", "three"])
+  ] });
+  assert.deepEqual(tools.map((item) => item.name), ["PostgreSQL", "AKS", "Python"]);
+  assert.deepEqual(tools.map((item) => item.rank), [1, 2, 3]);
+  assert.equal(tools[0].jobCount, 2);
+  assert.equal(tools[0].share, 66.7);
+  assert.equal(tools[1].share, 33.3);
+  assert.equal(tools[0].evidence.length, 2);
+  assert.deepEqual(roleToolRecommendations({ totalJobs: 0, technologies: [] }), []);
+});
+
+test("master technologies merge catalogue aliases and count distinct saved JDs", () => {
+  const entries = masterTechnologies([
+    { name: "Postgres", category: "Other", aliases: [], jobIds: ["one"] },
+    { name: "PostgreSQL", category: "Data and retrieval", aliases: [], jobIds: ["one", "two"] },
+    { name: "Azure Foundry", category: "Other", aliases: [], jobIds: ["one"] },
+    { name: "Airflow", category: "Other", aliases: [], jobIds: ["two"] },
+    { name: "Custom Tool", category: "Other", aliases: ["custom alias"], jobIds: ["two"] },
+    { name: "RAG", category: "AI applications", aliases: [], jobIds: ["one"] },
+    { name: "Vector databases", category: "Data and retrieval", aliases: [], jobIds: ["one"] }
+  ]);
+  for (const name of ["AKS", "Azure AI Foundry", "PostgreSQL", "Qdrant", "pgvector", "LangSmith", "LangGraph", "TypeScript", "Python"]) {
+    assert.ok(entries.some((item) => item.name === name), name);
+  }
+  assert.equal(entries.find((item) => item.name === "PostgreSQL").jobCount, 2);
+  assert.equal(entries.some((item) => item.name === "Postgres"), false);
+  assert.equal(entries.find((item) => item.name === "Azure AI Foundry").jobCount, 1);
+  assert.equal(entries.find((item) => item.name === "Apache Airflow").builtIn, false);
+  assert.equal(entries.find((item) => item.name === "Apache Airflow").jobCount, 1);
+  for (const name of ["Custom Tool", "RAG", "Vector databases", "MLOps", "System design", "Prompt engineering", "IAM", "GPU", "OpenAI"]) {
+    assert.equal(entries.some((item) => item.name === name), false, name);
+  }
+  assert.equal(entries.find((item) => item.name === "PostgreSQL").type, "Databases");
+  assert.equal(entries.find((item) => item.name === "LangSmith").type, "Tools and frameworks");
+  assert.deepEqual(entries.slice(0, 3).map((item) => item.name), ["PostgreSQL", "Apache Airflow", "Azure AI Foundry"]);
+  for (let index = 1; index < entries.length; index += 1) {
+    assert.ok(entries[index - 1].jobCount >= entries[index].jobCount);
+    if (entries[index - 1].jobCount === entries[index].jobCount) {
+      assert.ok(entries[index - 1].name.localeCompare(entries[index].name) <= 0);
+    }
+  }
+});
+
+test("technology breakdown groups names and concepts without changing counts or percentages", () => {
+  const input = [
+    { name: "Python", category: "Languages", jobCount: 2, share: 66.7 },
+    { name: "Pinecone", category: "Other", jobCount: 1, share: 33.3 },
+    { name: "Vector DB", category: "Data and retrieval", jobCount: 1, share: 33.3 },
+    { name: "AWS", category: "Cloud platforms", jobCount: 3, share: 100 },
+    { name: "BigQuery", category: "Cloud platforms", jobCount: 2, share: 66.7 },
+    { name: "SQL", category: "Data and retrieval", jobCount: 1, share: 33.3 },
+    { name: "Docker", category: "Languages", jobCount: 1, share: 33.3 },
+    { name: "React", category: "Languages", jobCount: 1, share: 33.3 },
+    { name: "RAG", category: "AI applications", jobCount: 1, share: 33.3 }
+  ];
+  const result = technologyBreakdown(input);
+  assert.equal(result.length, input.length);
+  assert.equal(result[0].name, "AWS");
+  for (const original of input) {
+    const entry = result.find((item) => item.name === original.name);
+    assert.equal(entry.share, original.share);
+    assert.equal(entry.jobCount, original.jobCount);
+  }
+  for (const name of ["Pinecone", "Vector DB", "BigQuery"]) assert.equal(result.find((item) => item.name === name).type, "Databases and database types");
+  for (const name of ["SQL", "Python"]) assert.equal(result.find((item) => item.name === name).type, "Languages");
+  for (const name of ["Docker", "React", "RAG"]) assert.equal(result.find((item) => item.name === name).type, "Tools, frameworks and capabilities");
+  assert.deepEqual(technologyBreakdown([]), []);
+});
 
 function job(overrides = {}) {
   return { title: "AI Architect", company: "", body: "Python, PostgreSQL and RAG. Lang Chain is useful.", roleFamily: "ai-architect",

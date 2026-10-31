@@ -59,5 +59,21 @@ ALTER TABLE job_descriptions ADD COLUMN IF NOT EXISTS source_folder text;
 ALTER TABLE job_descriptions ADD COLUMN IF NOT EXISTS processing_mode text NOT NULL DEFAULT 'manual';
 ALTER TABLE job_descriptions ADD COLUMN IF NOT EXISTS ai_confidence numeric;
 ALTER TABLE job_descriptions ADD COLUMN IF NOT EXISTS source_url text;
+ALTER TABLE job_descriptions ADD COLUMN IF NOT EXISTS source_content_hash text;
+CREATE UNIQUE INDEX IF NOT EXISTS jd_source_content_hash_idx ON job_descriptions(source_content_hash) WHERE source_content_hash IS NOT NULL;
 ALTER TABLE jd_technology_mentions ADD COLUMN IF NOT EXISTS confidence numeric;
 CREATE UNIQUE INDEX IF NOT EXISTS jd_source_fingerprint_idx ON job_descriptions(source_fingerprint) WHERE source_fingerprint IS NOT NULL;
+CREATE TABLE IF NOT EXISTS jd_analyses (
+  id uuid PRIMARY KEY,
+  name text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  state text NOT NULL DEFAULT 'running',
+  previous_id uuid REFERENCES jd_analyses(id),
+  report jsonb,
+  progress jsonb
+);
+CREATE TABLE IF NOT EXISTS jd_analysis_jobs (
+  analysis_id uuid NOT NULL REFERENCES jd_analyses(id),
+  job_id uuid NOT NULL REFERENCES job_descriptions(id),
+  PRIMARY KEY (analysis_id,job_id)
+);

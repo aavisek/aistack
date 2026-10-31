@@ -1,8 +1,8 @@
 import pg from "pg";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { JdError, normalizeName, roles, validateDate, validateJob, learningPlan, extractTechnologies } from "./jd.mjs";
-import { naukriUrl, naukriFingerprint } from "./jd-naukri.mjs";
+import { JdError, normalizeName, roles, validateDate, validateJob, learningPlan, extractTechnologies, technologyBreakdown, masterTechnologies, roleToolRecommendations, sourceToolMentions } from "./jd.mjs";
+import { jobSourceUrl, jobSourceFingerprint } from "./jd-source.mjs";
 
 export class JdStore {
   constructor(databaseUrl) {
@@ -58,6 +58,19 @@ export class JdStore {
       WHERE processing_mode='ai-automatic' ORDER BY updated_at DESC`)).rows;
   }
 
+  async hasImportedJob(sourceUrl, contentHash = null) {
+    const result = await this.pool.query(`SELECT 1 FROM job_descriptions
+      WHERE source_fingerprint=$1 OR source_content_hash=$2 LIMIT 1`,
+    [jobSourceFingerprint(sourceUrl), contentHash]);
+    return result.rowCount > 0;
+  }
+
+  async importedJob(sourceUrl, contentHash) {
+    const result = await this.pool.query("SELECT id FROM job_descriptions WHERE source_fingerprint=$1 OR source_content_hash=$2 ORDER BY updated_at LIMIT 1",
+      [jobSourceFingerprint(sourceUrl), contentHash]);
+    return result.rows[0]?.id;
+  }
+
   async jobs() {
     return (await this.pool.query(`SELECT j.id,j.title,j.company,j.role_family AS "roleFamily",j.reviewed,
       to_char(j.collected_on,'YYYY-MM-DD') AS "collectedOn",count(m.technology_id)::int AS "technologyCount"
@@ -68,6 +81,19 @@ export class JdStore {
     const learned = (await this.pool.query(`SELECT t.name,t.category,array_agg(a.alias) AS aliases
       FROM technologies t JOIN technology_aliases a ON a.technology_id=t.id GROUP BY t.id`)).rows;
     return extractTechnologies(text, learned);
+  }
+
+  async technologyMasterList() {
+    const rows = (await this.pool.query(`SELECT t.name,t.category,
+      ARRAY(SELECT a.alias FROM technology_aliases a WHERE a.technology_id=t.id ORDER BY a.alias) AS aliases,
+      ARRAY(SELECT DISTINCT m.job_id FROM jd_technology_mentions m WHERE m.technology_id=t.id) AS "jobIds"
+      FROM technologies t ORDER BY t.name`)).rows;
+    const jobs = (await this.pool.query("SELECT id,title,body FROM job_descriptions ORDER BY title")).rows;
+    const sourceEntries = sourceToolMentions(jobs).map((item) => ({
+      name: item.name, category: item.category, aliases: [],
+      jobIds: item.evidence.map((source) => source.jobId)
+    }));
+    return masterTechnologies([...rows, ...sourceEntries]);
   }
 
   async job(id) {
@@ -128,16 +154,22 @@ export class JdStore {
   }
 
   async saveAiJob(input) {
-    const sourceUrl = input.sourceUrl ? naukriUrl(input.sourceUrl) : null;
+    const sourceUrl = input.sourceUrl ? jobSourceUrl(input.sourceUrl) : null;
     if ((!input.screenshotIds.length && !sourceUrl) || !input.technologies.length) throw new JdError("AI result must contain a source and technologies.", 502);
     if (sourceUrl && (input.screenshotIds.length || input.jobId)) throw new JdError("URL imports cannot replace screenshot jobs.", 502);
-    const fingerprint = sourceUrl ? naukriFingerprint(sourceUrl) : normalizeName([...input.screenshotIds].sort().join(","));
+    const fingerprint = sourceUrl ? jobSourceFingerprint(sourceUrl) : normalizeName([...input.screenshotIds].sort().join(","));
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
+      if (sourceUrl) await client.query("SELECT pg_advisory_xact_lock(724020)");
       const existing = input.jobId
         ? await client.query("SELECT id FROM job_descriptions WHERE id=$1 FOR UPDATE", [input.jobId])
         : await client.query("SELECT id FROM job_descriptions WHERE source_fingerprint=$1 FOR UPDATE", [fingerprint]);
+      if (input.rejectDuplicate && sourceUrl) {
+        const duplicate = await client.query("SELECT 1 FROM job_descriptions WHERE source_fingerprint=$1 OR source_content_hash=$2 LIMIT 1",
+          [fingerprint, input.sourceContentHash ?? null]);
+        if (duplicate.rowCount) throw new JdError("Duplicate JD rejected: this job ID or extracted document is already saved.", 409);
+      }
       const id = existing.rows[0]?.id ?? randomUUID();
       const pages = await client.query("SELECT id,status FROM jd_screenshots WHERE id=ANY($1::uuid[]) FOR UPDATE", [input.screenshotIds]);
       if (pages.rowCount !== input.screenshotIds.length || pages.rows.some((row) => row.status !== "ready")) throw new JdError("AI selected invalid screenshot pages.", 502);
@@ -148,11 +180,12 @@ export class JdStore {
       if (assigned.rows.some((row) => !draftJobs.includes(row.job_id))) throw new JdError("AI assigned a screenshot to an already reviewed job.", 502);
       const conflict = input.jobId ? "(id)" : "(source_fingerprint) WHERE source_fingerprint IS NOT NULL";
       await client.query(`INSERT INTO job_descriptions
-        (id,title,company,role_family,reviewed,body,source_fingerprint,source_folder,processing_mode,ai_confidence,source_url)
-        VALUES ($1,$2,$3,$4,true,$5,$6,$7,'ai-automatic',$8,$9)
+        (id,title,company,role_family,reviewed,body,source_fingerprint,source_folder,processing_mode,ai_confidence,source_url,source_content_hash)
+        VALUES ($1,$2,$3,$4,true,$5,$6,$7,'ai-automatic',$8,$9,$10)
         ON CONFLICT ${conflict} DO UPDATE SET title=$2,company=$3,role_family=$4,reviewed=true,
-        body=$5,source_fingerprint=$6,source_folder=$7,processing_mode='ai-automatic',ai_confidence=$8,source_url=$9,updated_at=now()`,
-      [id, input.title, input.company, input.roleFamily, input.body, fingerprint, input.sourceFolder, input.confidence, sourceUrl]);
+        body=$5,source_fingerprint=$6,source_folder=$7,processing_mode='ai-automatic',ai_confidence=$8,source_url=$9,
+        source_content_hash=COALESCE($10,job_descriptions.source_content_hash),updated_at=now()`,
+      [id, input.title, input.company, input.roleFamily, input.body, fingerprint, input.sourceFolder, input.confidence, sourceUrl, input.sourceContentHash ?? null]);
       await client.query("DELETE FROM jd_pages WHERE job_id=$1", [id]);
       for (const [order, screenshotId] of input.screenshotIds.entries()) {
         await client.query("INSERT INTO jd_pages(screenshot_id,job_id,page_order) VALUES ($1,$2,$3)", [screenshotId, id, order]);
@@ -177,14 +210,28 @@ export class JdStore {
     }
   }
 
-  async demand(params) {
+  async toolRecommendations(params) {
+    return Promise.all([
+      { role: "ai-platform-architect", title: "AI Platform Architect" },
+      { role: "ai-architect", title: "AI Solution Architect" }
+    ].map(async ({ role, title }) => {
+      const filters = new URLSearchParams(params);
+      filters.set("role", role);
+      const demand = await this.demand(filters, true);
+      return { role, title, totalJobs: demand.totalJobs, tools: demand.recommendedTools };
+    }));
+  }
+
+  async demand(params, includeRecommendations = false) {
     const role = params.get("role") || null;
     if (role && !roles.includes(role)) throw new JdError("Invalid role filter.");
     const from = params.get("from") ? validateDate(params.get("from"), "From") : null;
     const to = params.get("to") ? validateDate(params.get("to"), "To") : null;
     if (from && to && from > to) throw new JdError("From must be on or before To.");
-    const values = [role, from, to];
-    const filter = "j.reviewed AND ($1::text IS NULL OR j.role_family=$1) AND ($2::date IS NULL OR j.collected_on >= $2) AND ($3::date IS NULL OR j.collected_on <= $3)";
+    const analysis = params.get("analysis") || null;
+    if (analysis && !/^[0-9a-f-]{36}$/i.test(analysis)) throw new JdError("Invalid analysis ID.");
+    const values = [role, from, to, analysis];
+    const filter = "j.reviewed AND ($1::text IS NULL OR j.role_family=$1) AND ($2::date IS NULL OR j.collected_on >= $2) AND ($3::date IS NULL OR j.collected_on <= $3) AND ($4::uuid IS NULL OR EXISTS(SELECT 1 FROM jd_analysis_jobs b WHERE b.analysis_id=$4 AND b.job_id=j.id))";
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
@@ -202,8 +249,13 @@ export class JdStore {
         FROM jd_technology_mentions m JOIN job_descriptions j ON j.id=m.job_id JOIN technologies t ON t.id=m.technology_id
         WHERE ${filter} GROUP BY t.id ORDER BY count(*) DESC,t.name`, values)).rows
         .map((item) => ({ ...item, share: total ? Math.round(item.jobCount / total * 1000) / 10 : 0 }));
+      const result = { totalJobs: total, areas, technologies, technologyBreakdown: technologyBreakdown(technologies), learningPlan: learningPlan(technologies) };
+      if (includeRecommendations) {
+        const jobs = (await client.query(`SELECT j.id,j.title,j.body FROM job_descriptions j WHERE ${filter} ORDER BY j.title`, values)).rows;
+        result.recommendedTools = roleToolRecommendations({ totalJobs: total, technologies: [...technologies, ...sourceToolMentions(jobs)] });
+      }
       await client.query("COMMIT");
-      return { totalJobs: total, areas, technologies, learningPlan: learningPlan(technologies) };
+      return result;
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;

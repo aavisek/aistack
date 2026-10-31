@@ -1,6 +1,7 @@
 import { jdConfig } from "./jd-config.mjs";
 import { JdStore } from "./jd-store.mjs";
 import { importScreenshots } from "./jd.mjs";
+import { snapshotSavedJobs } from "./jd-analysis.mjs";
 
 const config = jdConfig();
 if (!config.databaseUrl) {
@@ -18,8 +19,11 @@ if (!config.databaseUrl) {
       await importScreenshots(store, config, progress);
       console.log(JSON.stringify(progress, null, 2));
       if (progress.failed) process.exitCode = 1;
+    } else if (command === "snapshot") {
+      const id = await snapshotSavedJobs(store, process.argv[3]);
+      console.log(`Saved collection snapshot: http://localhost:3000/#jd/${id}`);
     } else {
-      throw new Error("Use migrate or import.");
+      throw new Error("Use migrate, import or snapshot \"Analysis name\".");
     }
   } catch (error) {
     console.error("JD command failed:", error.message);

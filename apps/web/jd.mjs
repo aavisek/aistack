@@ -10,7 +10,7 @@ export const categories = ["AI applications", "Models and ML", "Cloud platforms"
 const groups = [
   ["AI applications", [
     ["RAG", "retrieval augmented generation", "retrieval-augmented generation"], ["LLMs", "LLM", "large language models"],
-    ["LangChain", "Lang Chain"], ["LangGraph"], ["LlamaIndex", "Llama Index"], ["Semantic Kernel"], ["AutoGen"], ["CrewAI"],
+    ["LangChain", "Lang Chain"], ["LangGraph", "Langgraph"], ["LangSmith"], ["LlamaIndex", "Llama Index"], ["Semantic Kernel"], ["AutoGen"], ["CrewAI"],
     ["MCP", "model context protocol"], ["Agent-to-Agent", "A2A"], ["Agentic AI", "agentic systems", "AI agents", "multi-agent"],
     ["Prompt engineering", "prompt-engineering"], ["Embeddings", "embedding"], ["Semantic search"], ["Model evaluation", "evaluation suites", "evals"],
     ["Structured outputs"], ["Model routing", "model selection and routing"], ["Fine-tuning", "fine tuning", "fine-tuned"],
@@ -19,18 +19,18 @@ const groups = [
   ["Models and ML", [
     ["PyTorch"], ["TensorFlow"], ["Hugging Face", "HuggingFace"], ["Transformers"], ["Scikit-learn", "sklearn"],
     ["Deep learning"], ["Machine learning"], ["NLP", "natural language processing"], ["Computer vision"], ["ONNX"],
-    ["vLLM"], ["Ollama"], ["OpenAI"], ["GPT"], ["Llama"], ["Claude"], ["Gemini"]
+    ["vLLM"], ["Ollama"], ["OpenAI"], ["GPT"], ["Llama"], ["Claude"], ["Gemini", "Google Gemini"]
   ]],
   ["Cloud platforms", [
-    ["Azure", "Microsoft Azure"], ["AWS", "Amazon Web Services"], ["GCP", "Google Cloud", "Google Cloud Platform"],
-    ["Azure OpenAI", "Azure OpenAI Service"], ["Azure AI Foundry", "Microsoft Foundry", "Azure AI Studio"],
-    ["Azure Machine Learning", "Azure ML", "ML Studio"], ["AKS", "Azure Kubernetes Service"],
+    ["Azure", "Microsoft Azure", "Azure Cloud"], ["AWS", "Amazon Web Services"], ["GCP", "Google Cloud", "Google Cloud Platform", "Google Cloud Platform (GCP)"],
+    ["Azure OpenAI", "Azure OpenAI Service"], ["Azure AI Foundry", "Azure Foundry", "Microsoft Foundry", "Azure AI Studio"],
+    ["Azure Machine Learning", "Azure ML", "ML Studio", "Azure ML Services"], ["AKS", "Azure Kubernetes Service", "Azure Kubernetes Service (AKS)"],
     ["AWS Bedrock", "Amazon Bedrock", "Bedrock"], ["SageMaker", "Amazon SageMaker"], ["AWS Lambda", "Lambda"],
     ["Amazon S3", "S3"], ["Vertex AI"], ["BigQuery", "Big Query"], ["Cloud Storage"], ["Azure Speech"],
     ["AWS Transcribe", "Transcribe"], ["Amazon Polly", "Polly"], ["Azure AI Search"], ["Microsoft 365 Copilot"], ["Copilot Studio"]
   ]],
   ["Data and retrieval", [
-    ["SQL"], ["PostgreSQL", "Postgres"], ["MySQL"], ["NoSQL"], ["MongoDB"], ["DynamoDB"], ["Redis"], ["Pinecone"],
+    ["SQL"], ["PostgreSQL", "Postgres", "PostGressSQL"], ["MySQL"], ["NoSQL"], ["MongoDB"], ["DynamoDB"], ["Redis"], ["Pinecone"],
     ["Weaviate"], ["Milvus"], ["Qdrant"], ["pgvector"], ["Vector databases", "vector database", "vector stores", "vector store"],
     ["Databricks"], ["Apache Spark", "Spark"], ["Snowflake"], ["Delta Lake"], ["Microsoft Fabric"], ["ETL"], ["Data pipelines"]
   ]],
@@ -57,6 +57,130 @@ const groups = [
 ];
 export const catalogue = groups.flatMap(([category, entries]) => entries.map(([name, ...aliases]) => ({ name, category, aliases: [name, ...aliases] })));
 export const normalizeName = (value) => value.toLowerCase().replace(/\s+/g, " ").trim();
+
+const exactMasterNames = new Set([
+  "LangChain", "LangGraph", "LangSmith", "LlamaIndex", "Semantic Kernel", "AutoGen", "CrewAI",
+  "PyTorch", "TensorFlow", "Hugging Face", "Transformers", "Scikit-learn", "ONNX", "vLLM", "Ollama",
+  "Claude", "Gemini", "Llama", "Azure", "AWS", "GCP", "Azure OpenAI", "Azure AI Foundry",
+  "Azure Machine Learning", "AKS", "AWS Bedrock", "SageMaker", "AWS Lambda", "Amazon S3",
+  "Vertex AI", "BigQuery", "Cloud Storage", "Azure Speech", "AWS Transcribe", "Amazon Polly",
+  "Azure AI Search", "Microsoft 365 Copilot", "Copilot Studio", "SQL", "PostgreSQL", "MySQL",
+  "MongoDB", "DynamoDB", "Redis", "Pinecone", "Weaviate", "Milvus", "Qdrant", "pgvector",
+  "Databricks", "Apache Spark", "Snowflake", "Delta Lake", "Microsoft Fabric", "Docker",
+  "Kubernetes", "Terraform", "Bicep", "Helm", "GitHub Actions", "Azure DevOps", "Jenkins",
+  "MLflow", "Kubeflow", "OpenTelemetry", "Prometheus", "Grafana", "Linux", "Kafka", "RabbitMQ",
+  "FastAPI", "Flask", "Django", "Node.js", "NestJS", "Microsoft Purview", "Microsoft Defender",
+  "Microsoft Sentinel", "Python", "TypeScript", "JavaScript", "Java", "C++", "C#", "Go", "Rust", "Bash"
+]);
+const recognizedMasterProducts = [
+  ["Platform engineering", [
+    ["Apache Airflow", "Airflow"], ["Git"], ["Datadog"], ["Dynatrace"], ["New Relic"],
+    ["BigPanda"], ["Moogsoft"], ["Splunk"], ["Istio"], ["Linkerd"], ["KEDA"], ["SonarCloud"],
+    ["ServiceNow"], ["ServiceNow Now Assist"], ["ServiceNow IT Operations"], ["ManageEngine", "Manage Engine"],
+    ["Jira Service Management"], ["Blue Prism"], ["Camunda"], ["Temporal"]
+  ]],
+  ["Cloud platforms", [
+    ["Amazon EKS", "EKS"], ["Amazon EventBridge", "EventBridge"], ["Amazon Kinesis", "Kinesis"], ["Amazon VPC", "VPC"], ["AWS IAM"],
+    ["AWS Step Functions", "Step Functions"], ["AWS CloudFormation", "CloudFormation"], ["Amazon Bedrock AgentCore", "AgentCore"],
+    ["Amazon Bedrock Agents", "Bedrock Agents"], ["Azure API Management"], ["Azure Application Insights"],
+    ["Amazon API Gateway", "API Gateway"], ["Amazon Bedrock Knowledge Bases", "Bedrock Knowledge Sources"],
+    ["Vertex AI Agent Engine"], ["Azure Data Factory"], ["Azure Functions"], ["Azure Key Vault"], ["Azure Web Apps"],
+    ["Azure DevOps Boards"], ["Azure DevOps Pipelines"], ["Azure DevOps Repos"], ["Azure DevOps Test Plans"],
+    ["Cloud Run"], ["Google Cloud Pub/Sub"], ["Microsoft Entra ID"], ["Microsoft Graph"]
+  ]],
+  ["AI applications", [
+    ["Langfuse"], ["Arize Phoenix", "Phoenix"], ["DeepEval"], ["Ragas", "RAGAS"], ["Google ADK"], ["Strands Agents"],
+    ["FAISS"], ["OpenAI SDK"], ["Anthropic SDK"], ["Claude Agent SDK", "Claude Agents SDK"],
+    ["Claude Code"], ["Codex"], ["GitHub Copilot"], ["Cursor"]
+  ]],
+  ["Data and retrieval", [
+    ["Elasticsearch"], ["Neo4j"], ["Chroma", "ChromaDB"], ["SQLite"], ["MariaDB"],
+    ["Microsoft SQL Server", "SQL Server"], ["Azure Cosmos DB", "Cosmos DB"], ["Oracle Database"],
+    ["Power BI"], ["Tableau"]
+  ]],
+  ["Architecture and APIs", [
+    ["React"], ["Angular"], ["Vue.js", "Vue"], [".NET"], ["ASP.NET"], ["Spring Boot"],
+    ["Apigee"], ["Kong"], ["Keycloak"], ["Okta"], ["Ory"]
+  ]]
+].flatMap(([category, entries]) => entries.map(([name, ...aliases]) => ({ name, category, aliases: [name, ...aliases] })));
+
+export function technologyBreakdown(technologies) {
+  const databases = new Set([
+    "PostgreSQL", "Postgres", "MySQL", "MongoDB", "DynamoDB", "Redis", "Pinecone", "Weaviate",
+    "Milvus", "Qdrant", "pgvector", "Snowflake", "BigQuery", "NoSQL", "Vector databases",
+    "Vector database", "Vector DB", "Vector stores", "Vector store", "SQL Server",
+    "Microsoft SQL Server", "Oracle", "Oracle Database", "SQLite", "MariaDB", "Cassandra",
+    "Neo4j", "Elasticsearch", "OpenSearch", "Cosmos DB", "Azure Cosmos DB", "Chroma", "ChromaDB"
+  ].map(normalizeName));
+  const frameworks = new Set(["React", "Angular", "Vue", "Vue.js", ".NET", "ASP.NET", "Spring", "Spring Boot", "Express"].map(normalizeName));
+  const knownCategories = new Map(catalogue.flatMap((item) => item.aliases.map((alias) => [normalizeName(alias), item.category])));
+  return technologies.map((item) => {
+    const name = normalizeName(item.name);
+    const category = knownCategories.get(name) ?? item.category;
+    return {
+      ...item,
+      type: databases.has(name) ? "Databases and database types"
+        : frameworks.has(name) ? "Tools, frameworks and capabilities"
+          : category === "Languages" || name === "sql" ? "Languages"
+            : category === "Cloud platforms" ? "Cloud platforms and services"
+              : "Tools, frameworks and capabilities"
+    };
+  }).sort((a, b) => b.share - a.share || b.jobCount - a.jobCount || a.name.localeCompare(b.name));
+}
+
+export function masterTechnologies(observed) {
+  const concreteCatalogue = catalogue.filter((item) => exactMasterNames.has(item.name));
+  const recognized = [...concreteCatalogue, ...recognizedMasterProducts];
+  const entries = new Map(concreteCatalogue.map((item) => [normalizeName(item.name), {
+    name: item.name, category: item.category, aliases: [...item.aliases], builtIn: true, jobIds: new Set()
+  }]));
+  const aliases = new Map(recognized.flatMap((item) => item.aliases.map((alias) => [normalizeName(alias), item])));
+  for (const item of observed) {
+    const product = aliases.get(normalizeName(item.name));
+    if (!product) continue;
+    const key = normalizeName(product.name);
+    if (!entries.has(key)) entries.set(key, { ...product, aliases: [...product.aliases], builtIn: false, jobIds: new Set() });
+    const entry = entries.get(key);
+    entry.aliases = [...new Set([...entry.aliases, item.name, ...item.aliases])];
+    for (const id of item.jobIds) entry.jobIds.add(id);
+  }
+  return technologyBreakdown([...entries.values()].map(({ jobIds, ...item }) => ({
+    ...item, jobCount: jobIds.size, share: 0
+  }))).map(({ share, ...item }) => ({
+    ...item, type: item.type === "Databases and database types" ? "Databases"
+      : item.type === "Tools, frameworks and capabilities" ? "Tools and frameworks" : item.type
+  })).sort((a, b) => b.jobCount - a.jobCount || a.name.localeCompare(b.name));
+}
+
+export function roleToolRecommendations(demand) {
+  const observed = demand.technologies.map((item) => ({
+    name: item.name, category: item.category, aliases: [],
+    jobIds: item.evidence.map((source) => source.jobId)
+  }));
+  return masterTechnologies(observed).filter((item) => item.jobCount > 0).map((item, index) => ({
+    rank: index + 1, name: item.name, type: item.type, jobCount: item.jobCount,
+    share: demand.totalJobs ? Math.round(item.jobCount / demand.totalJobs * 1000) / 10 : 0,
+    evidence: demand.technologies.filter((technology) => item.aliases.some((alias) => normalizeName(alias) === normalizeName(technology.name)))
+      .flatMap((technology) => technology.evidence)
+      .filter((source, sourceIndex, sources) => sources.findIndex((other) => other.jobId === source.jobId) === sourceIndex)
+  }));
+}
+
+export function sourceToolMentions(jobs) {
+  const products = [...catalogue.filter((item) => exactMasterNames.has(item.name)), ...recognizedMasterProducts];
+  const entries = new Map();
+  for (const job of jobs) {
+    const marker = /--- Original [^\n]+ source document ---\s*\n/.exec(job.body);
+    const source = marker ? job.body.slice(marker.index + marker[0].length) : job.body;
+    for (const product of products) {
+      const evidence = findEvidence(source, product.aliases);
+      if (!evidence) continue;
+      if (!entries.has(product.name)) entries.set(product.name, { name: product.name, category: product.category, evidence: [] });
+      entries.get(product.name).evidence.push({ jobId: job.id, title: job.title, evidence });
+    }
+  }
+  return [...entries.values()];
+}
 
 export class JdError extends Error {
   constructor(message, status = 400) {

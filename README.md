@@ -55,32 +55,35 @@ This slice uses Node's built-in HTTP server and Shiki for code highlighting. The
 
 ## JD Intelligence
 
-Open <http://localhost:3000/#jd> to import job-description screenshots, run
-zero-touch Azure OpenAI analysis, and see demand **in your collected JDs**.
-Local OCR remains available as an offline fallback; its screenshots and JD text
-are not sent to an external AI service.
+Open <http://localhost:3000/#jd> to create named, dated HTML batch analyses
+with Azure OpenAI, or reopen saved reports by unique ID. The old cumulative
+analysis and standalone import controls are no longer shown.
+Legacy OCR and URL-import APIs remain available; local OCR itself does not
+send screenshots or JD text to an external AI service.
 Node.js 20.12+ is required.
 
-### Import Naukri job links
+### Legacy Naukri URL-import API
 
-Alongside screenshot upload, choose **Or upload a Naukri URL list**, select a
-UTF-8 `.txt` file, then click **Upload URL list and analyze**. Put one full HTTPS
-job-listing URL per line (on `naukri.com` or `www.naukri.com`). Blank lines and
+For API-based imports, submit the contents of a UTF-8 `.txt` file to
+`POST /api/jd/naukri-import`. Put one full HTTPS job-listing URL per line
+(on `naukri.com` or `www.naukri.com`). Blank lines and
 standalone numbered separators such as `1.` are ignored, including the format
 in `Job Description/Text Files/Naukri List 10-30-2026.txt`.
 Files are limited to 256 KB and 100 distinct jobs. Tracking parameters,
 fragments, trailing slashes and different slugs for the same Naukri job ID do
 not create duplicates.
 
-The server retrieves each listing's structured `JobPosting` description and
-sends the extracted text to your configured Azure OpenAI deployment, using the
+The server retrieves each listing's structured `JobPosting` description, or
+uses an isolated Chromium browser to read public JavaScript-rendered listings
+when structured data is absent. It sends only the extracted job text to your configured Azure OpenAI deployment, using the
 same evidence validation and one correction attempt as screenshot AI imports.
-No OCR or separate **Run AI import** action is needed. Results are saved as
-reviewed jobs and appear automatically in the refreshed job list, demand
-rankings and learning priorities. Open a saved job to view its JD text,
-preserved original source text and link to the original listing.
-Re-uploading a URL re-analyzes and updates that job, replacing any manual
-corrections rather than increasing demand counts. Screenshot imports are unchanged.
+No OCR or separate AI-import request is needed. Results are saved as
+reviewed jobs in the global collection; they do not create a batch report.
+A subsequent HTML batch can reuse those jobs. Jobs included in a saved
+analysis can be opened to view their current JD text, preserved original
+source text and link to the original listing.
+Re-uploading an existing job ID now rejects it as a duplicate, preserving
+manual corrections rather than increasing demand counts. Screenshot imports are unchanged.
 
 Run `npm run jd:migrate` after updating to add URL provenance to existing
 databases, and restart the server. Azure OpenAI configuration is required.
@@ -89,12 +92,197 @@ progress and individual URL failures use `GET /api/jd/status`'s `aiProgress`.
 Only one OCR or AI import runs at a time. Progress is in-memory; saved jobs
 survive restarts and uploading the file again safely retries incomplete runs.
 
-Naukri may deny automated requests, require login/CAPTCHA/JavaScript, omit
-structured job data, or remove listings. The importer does **not** bypass those
+Naukri may deny automated requests, require login/CAPTCHA, change its page
+layout, or remove listings. The importer does **not** bypass those
 restrictions or send error pages to AI. Such URLs fail visibly while other
-URLs continue; use the existing screenshot upload instead. Downloads are
-limited to 20 seconds and 2 MB per listing; redirects must remain on allowed
-HTTPS Naukri job-listing URLs. No browser cookies or credentials are used.
+URLs continue; use saved HTML through **New analysis** instead. Downloads are
+limited to 20 seconds and 2 MB for the initial HTML. Browser fallback has a
+30-second page deadline and a 100000-character extracted-text limit. It only
+loads HTTPS Naukri resources and `static.naukimg.com`, with at most 200 requests,
+and blocks images, fonts, media, frames, WebSockets and service workers.
+Top-level redirects must remain on the same allowed Naukri job ID.
+No existing browser cookies, credentials or profile are used; each temporary
+browser is closed after extraction. Chromium's sandbox must be supported by
+the host (including container deployments); it is not disabled by the importer.
+
+### New batch analyses and trends
+
+In JD Intelligence choose **New analysis** and upload saved
+Naukri/LinkedIn job HTML files. Each analysis contains only that batch, not the
+cumulative collection. Existing jobs matching a source ID or extracted-text
+hash are reused without another AI request; membership counts each job once.
+New jobs are analyzed using the configured Azure deployment.
+The name is filled automatically when you open the form, using UTC date/time
+(including milliseconds), for example `JD analysis 2026-10-31 05:35:45.758 UTC`.
+No manual name entry is needed. API creation also generates a timestamped
+name when the `name` field is omitted; explicit API names remain supported.
+
+The generated report freezes demand, exact-name rankings, both role
+recommendations, the roadmap and comparisons with the previous completed
+batch. Changes are percentage points, using each batch's own reviewed-job
+denominator. All-job changes may reflect different role/source mixes; role
+comparisons are shown separately. These are collection trends, not a market
+forecast. The first batch establishes a baseline; historical cumulative jobs
+are not retroactively treated as a batch. The JD page opens an analysis-history
+table, not the old cumulative analysis/import page. Each batch has a stable
+unique identifier `JD-YYYYMMDD-<UUID>` (UTC creation date), including existing
+saved batches. Click its ID to reopen that report at `#jd/<UUID>`; direct links,
+reloads and browser back/forward navigation retain the selected report.
+Multiple batches on the same day remain distinct. Runs without a report show
+their ID and status but are not clickable. Choose **All saved analyses** to
+return to history; **New analysis** is available in both views.
+
+To preserve jobs collected before batch reports existed, run
+`node apps/web/jd-cli.mjs snapshot "Original saved collection"`.
+This saves all current jobs into a separate dated, frozen report without
+fetching listings or calling AI. It does not modify existing batches or job
+records, and is explicitly labeled as a saved-collection snapshot. Opening
+reports only reads persisted results; it does not regenerate analysis.
+
+Each saved report has **Download AI Platform Architect PDF**,
+**Download AI Solution Architect PDF** and **Download learning roadmap PDF**
+buttons. Downloads contain the batch ID/date and frozen results: role rankings
+with evidence, or the full 24-month roadmap with priorities, role buckets,
+projects and completion checks. PDFs are generated locally by sandboxed
+Chromium with scripts and network disabled; no additional AI request is made.
+The endpoint is `GET /api/jd/analyses/:id/pdf/:type`, where type is
+`ai-platform-architect`, `ai-architect` or `roadmap`. Existing saved reports
+also support PDF downloads. Only one PDF is generated at a time.
+
+Files are read offline with scripts/network disabled. LinkedIn accepts saved
+`JobPosting` structured data or recognized public/signed-in job-description
+containers. Expand the complete description before saving. No LinkedIn
+credentials or cookies are used; unsupported layouts fail per file.
+Saved job URLs on `linkedin.com`, `www.linkedin.com` and `in.linkedin.com`
+normalize to the same job ID for duplicate detection. The public description
+layout has been verified offline against 13 saved Indian LinkedIn pages;
+other layouts are not assumed supported.
+Limits remain 100 files, 2 MB/file and 10 MB total. Reports and memberships
+persist in PostgreSQL; failed files are recorded. A nonempty partial batch
+gets a report; empty failures do not become comparison baselines. After a
+server interruption, create a new analysis to retry (existing jobs are reused).
+Snapshots preserve historical output even if jobs are later edited.
+
+Run `npm run jd:migrate` and restart after updating. APIs:
+`POST /api/jd/analyses` with `{ "name": "...", "files": [{ "name": "job.html", "html": "..." }] }`,
+`GET /api/jd/analyses`, and `GET /api/jd/analyses/:id`. Creation returns 202;
+poll `/api/jd/status` for completion and `analysisId`.
+
+### Two-year AI Platform Architect roadmap
+
+JD Intelligence includes a **24-month AI Platform Architect learning roadmap**
+for a programming/cloud beginner at **16 hours/week**. The weekly allocation is
+4 hours of concepts/docs, 8 building, 2 testing/troubleshooting and 2 review.
+It budgets 96 study weeks plus 8 buffer weeks (1664 hours over approximately
+two years), with a project and three measurable checks for every month.
+
+**P0** months 1-12 are essential foundations. **P1** months 13-14, 16-18 and
+22-23 build an AI stack and prove job-ready skills. **P2** months 15, 19-21 and
+24 are optional expansion. There are 19 core monthly blocks: optional months
+can become revision/application time. Core prerequisites do not depend on
+optional blocks. Focus on one stack (Python, Azure, PostgreSQL/pgvector,
+LangGraph) rather than mastering every tool; supporting tools and alternatives
+are explicitly labeled. Readiness checkpoints at months 6, 12, 18 and 23
+describe demonstrable junior backend/platform/AI engineering skills, not an
+architect-title or employment guarantee.
+
+The monthly cards are grouped into **Junior role** (months 1-18),
+**Senior role** (19-21) and **Architect role** (22-24) learning buckets.
+These describe learning scope, not attained seniority. Senior modules remain
+P2 optional expansion; capstone months 22-23 remain P1 and strengthen the junior
+portfolio. Each bucket includes goals and readiness evidence. Senior and
+architect roles additionally require sustained production ownership, team
+delivery and cross-team design experience beyond completing the curriculum.
+
+Saved reviewed platform JDs annotate tool demand; they do not reorder the
+curriculum or remove foundations. Date filters update annotations while the
+main demand role filter does not change the roadmap's target. Other JD tools
+are deferred in a separate optional list. Use cloud budgets, non-sensitive
+practice data and lab teardown. `GET /api/jd/roadmap?from=YYYY-MM-DD&to=YYYY-MM-DD`
+returns the roadmap. This is a reference curriculum; completion is not tracked.
+
+### Technology percentage breakdown
+
+The generic quarterly learning sequence in JD Intelligence is replaced by
+two **Role-specific tool learning recommendations** lists: **AI Platform
+Architect** (`ai-platform-architect`) and **AI Solution Architect** (the existing
+`ai-architect` bucket; no jobs are reclassified). Each ranks recognized concrete
+tools/languages/services/databases by distinct reviewed-job count within that
+role, with alphabetical ties. Known aliases count once per job; unmentioned
+tools and broad concepts are excluded. Share uses that role's reviewed-job
+total, rounded to one decimal place, and source evidence is linked.
+Recommendations check recorded mentions plus recognized concrete names in the
+original saved source document, so omissions in AI extraction do not hide
+supported tools. When no preserved original-source section exists, the saved
+JD body is checked instead. Source matches do not change saved jobs or the
+main demand counts. The recognized-name catalogue is finite: this is coverage
+of known products in your saved JDs, not proof of universal role completeness.
+Both lists respect collection-date filters but always show both roles,
+independent of the main demand role filter. These are demand-based priorities,
+not prerequisite paths or personalized skill-gap assessments.
+`GET /api/jd/recommendations?from=YYYY-MM-DD&to=YYYY-MM-DD` returns both lists.
+The legacy demand API's `learningPlan` remains available for compatibility.
+
+The **Technology master list for learning modules** contains curated concrete
+products, tools, frameworks, languages, cloud services and databases, plus
+recognized named products from stored technologies (including draft JDs).
+Broad concepts such as RAG, MLOps, vector databases and architecture are excluded
+from this list; they remain in the demand tables. An explicit recognized-name
+list prevents arbitrary extracted phrases from being presented as tools.
+Unrecognized names require catalogue review before inclusion; the list is not
+an exhaustive inventory of every product.
+Search canonical names or aliases, filter by type, select individual entries
+or all matches, then copy or download selected names as a newline-separated
+`.txt` list. Known catalogue aliases merge into one canonical entry, and
+saved-JD counts count distinct jobs across aliases and recognized names in the
+original source text, including tools missed by AI extraction. Catalogue-only entries
+remain available with zero saved JDs. Entries rank by distinct saved-job count
+(including drafts), descending, with alphabetical ties and zero-count entries
+last. Search, type filters and selected-name exports retain this ranking.
+This list is independent of demand
+filters. Selections persist only within the current view; it does not create
+or modify learning modules. `GET /api/jd/technologies` exposes the master list.
+
+JD Intelligence also shows **Languages, tools, cloud platforms and databases
+by percentage**, grouped by type and ranked by share within each group.
+Names are taken from saved technology mentions; broad concepts such as RAG,
+MLOps and vector databases are included, not expanded into inferred products.
+Database names/types are grouped separately from other data tools and cloud
+services. Share uses the same selected reviewed jobs and role/collection-date
+filters as the main demand table, rounded to one decimal place. Percentages
+can overlap and do not add up to 100%. The demand API exposes these rows as
+`technologyBreakdown`, retaining the existing counts, shares and evidence.
+
+### Batch import saved webpages
+
+When automated Naukri downloads are denied, open each listing normally, expand
+**Read more**, and save it as **Webpage, Complete**. In JD Intelligence choose
+**Saved HTML files**, select multiple `.html`/`.htm` files, then click
+**Import saved webpages and analyze**. Companion `_files` folders are not needed.
+Select up to 100 files, at most 2 MB per file and 10 MB total.
+
+Pages are parsed in offline Chromium with JavaScript and all network requests
+disabled. A saved Naukri canonical/source URL and a complete job-description
+section are required. Only extracted JD text is sent to Azure OpenAI; raw HTML
+is not sent or persisted by the upload endpoint. Each successful job is saved
+as reviewed and appears in jobs, demand and learning priorities automatically.
+Bad files fail individually while the rest continue.
+
+Both URL and saved-page imports reject an already saved Naukri job ID (even if
+its slug, filename or tracking parameters differ), or an identical extracted
+document after Unicode/whitespace normalization. Duplicates are listed separately,
+do not overwrite existing jobs, and are checked before AI requests. A
+transactional database check and unique indexes also prevent concurrent
+duplicate inserts. This is exact-source deduplication, not fuzzy matching of
+similar roles or screenshot jobs without a Naukri ID. Historical jobs without
+a stored text hash are still detected by their Naukri job ID.
+
+`POST /api/jd/html-import` accepts `{ "files": [{ "name": "job.html", "html": "..." }] }`
+and returns HTTP 202. Poll `/api/jd/status` for `aiProgress` (including `skipped`,
+`duplicates` and per-file `errors`). A batch with only duplicates completes with
+zero jobs saved. Only one HTML, URL, OCR or screenshot-AI import runs at a time.
+Run `npm run jd:migrate` after updating, then restart the app.
+Saved pages in `Job Description/Webpage/` are Git-ignored.
 
 ### Local setup
 
@@ -102,6 +290,7 @@ HTTPS Naukri job-listing URLs. No browser cookies or credentials are used.
 # Ubuntu/Debian; on other systems install Tesseract with English language data.
 sudo apt-get install tesseract-ocr tesseract-ocr-eng
 npm install
+npx playwright install --with-deps chromium
 cp .env.example .env
 docker compose -f infra/docker-compose.yml up -d jd-db
 npm run jd:migrate
