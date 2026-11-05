@@ -25,6 +25,13 @@ services:
       HOST: 0.0.0.0
       JD_DATABASE_URL: postgresql://aistack:${JD_POSTGRES_PASSWORD:-aistack_local}@jd-db:5432/aistack
       JD_SCREENSHOT_DIR: /app/Job Description
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET:-}
+      AUTH_BASE_URL: ${AUTH_BASE_URL:-http://localhost:3000}
+      AUTH_ALLOWED_EMAIL: ${AUTH_ALLOWED_EMAIL:-}
+      AUTH_ALLOWED_EMAILS: ${AUTH_ALLOWED_EMAILS:-}
+      AUTH_ALLOWED_DOMAINS: ${AUTH_ALLOWED_DOMAINS:-}
     volumes:
       - "../Job Description:/app/Job Description"
     depends_on:

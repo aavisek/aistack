@@ -323,6 +323,25 @@ environment variables take precedence. PostgreSQL uses a named Docker volume
 and binds to `127.0.0.1:55432` to avoid conflicting with existing databases.
 The example database password is **local-development only**.
 
+### Google sign-in (optional)
+
+Authentication is off unless `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set.
+When enabled, every page and `/api/*` route except `/api/health` requires a signed-in
+Google account (OAuth 2.0 authorization-code flow with PKCE and nonce; the session is
+an HMAC-signed, HttpOnly cookie valid for 7 days).
+
+1. In [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials)
+   create an **OAuth client ID** of type *Web application* (configure the consent screen first).
+2. Add `http://localhost:3000/auth/callback` as an authorized redirect URI
+   (use your real `https://` origin in production).
+3. Add to `.env`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SESSION_SECRET`
+   (`openssl rand -base64 48`), and `AUTH_BASE_URL` (the public origin, default `http://localhost:3000`).
+4. Set `AUTH_ALLOWED_EMAIL` to the Google account allowed to sign in (required, same variable as
+   the nw360 project). `AUTH_ALLOWED_EMAILS` and `AUTH_ALLOWED_DOMAINS` (comma-separated) are optional extras.
+
+Use an `https://` `AUTH_BASE_URL` in production so session cookies are marked `Secure`.
+Never commit the client secret or session secret.
+
 ### Fully automatic Azure OpenAI analysis
 
 The **Run AI import** action combines the persisted local OCR text from each

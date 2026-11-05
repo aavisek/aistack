@@ -36,7 +36,7 @@
         <header class="topbar">
           <button class="mobile-brand" aria-label="Open navigation"><span class="brand-mark">A</span></button>
           <div class="breadcrumb"><span>Workspace</span><span>/</span><strong id="crumb">Today</strong></div>
-          <div class="top-actions"><span class="offline-chip"><i></i> Local mode</span><button class="icon-button" aria-label="Toggle theme">☼</button><button class="avatar small">AM</button></div>
+          <div class="top-actions"><span class="offline-chip"><i></i> Local mode</span><button class="icon-button" aria-label="Toggle theme">☼</button><button class="avatar small" id="auth-avatar" title="Account">AM</button><form method="post" action="/auth/logout" id="auth-logout" hidden><button class="icon-button" type="submit" aria-label="Sign out" title="Sign out">⎋</button></form></div>
         </header>
         <div id="content" class="content"></div>
       </main>

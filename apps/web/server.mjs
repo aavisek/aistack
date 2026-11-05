@@ -8,6 +8,7 @@ import { cheatSheetFor, cheatSheetInfo, renderCheatSheetPage } from "./cheatshee
 import { jdConfig } from "./jd-config.mjs";
 import { JdStore } from "./jd-store.mjs";
 import { createJdApi } from "./jd-api.mjs";
+import { authConfig, createAuth } from "./auth.mjs";
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "public");
 const port = Number(process.env.PORT ?? 3000);
@@ -15,9 +16,12 @@ const types = { ".css": "text/css", ".html": "text/html", ".js": "text/javascrip
 const jdSettings = jdConfig();
 const jdStore = jdSettings.databaseUrl ? new JdStore(jdSettings.databaseUrl) : null;
 const jdApi = createJdApi(jdStore, jdSettings);
+const auth = createAuth(authConfig());
 
 const server = createServer(async (request, response) => {
   const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
+  if (await auth.handle(request, response, url)) return;
+  if (await auth.guard(request, response, url)) return;
   if (url.pathname === "/api/jd" || url.pathname.startsWith("/api/jd/")) {
     await jdApi(request, response, url);
     return;

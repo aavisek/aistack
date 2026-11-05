@@ -412,3 +412,13 @@ document.addEventListener("input", (event) => {
   }
 });
 window.addEventListener("hashchange", render); render();
+fetch("/api/auth/me").then((response) => response.ok ? response.json() : null).then((result) => {
+  const user = result?.data?.user;
+  if(!user) return;
+  const avatar = document.querySelector("#auth-avatar");
+  avatar.textContent = (user.name || user.email).split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+  avatar.title = user.email;
+  document.querySelector("#auth-logout").hidden = false;
+  const chip = document.querySelector(".offline-chip");
+  if(chip) chip.hidden = true;
+}).catch(() => {});
