@@ -83,5 +83,5 @@ temporary directory, executes blocks marked `verify="run"`, and checks their
 expected output. Manual fences remain visible in the lesson but are not run.
 Their date and OS metadata distinguish pending checks from checks actually
 performed.
-`npm run lessons:coverage` reports authored lessons against the 170 source
+`npm run lessons:coverage` reports authored lessons against the 171 source
 programs.

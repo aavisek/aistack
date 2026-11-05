@@ -1,4 +1,8 @@
 .program-link { text-decoration: none; min-height: 72px; }
+.track-card-link { display: block; color: inherit; text-decoration: none; }
+.track-card-link:hover, .track-card-link:focus-visible { border-color: var(--accent); }
+.track-card-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.track-detail { margin-top: 20px; }
 .program-link:hover, .program-link:focus-visible { border-color: var(--accent); }
 .program-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .lesson { padding: 24px; }

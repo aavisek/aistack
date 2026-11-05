@@ -95,7 +95,7 @@ export function validateLesson(source, filename, programCodes) {
   }
   if (metadata.id !== id) errors.push(`Front-matter id "${metadata.id}" does not match filename "${id}".`);
   if (!programCodes.has(metadata.id)) errors.push(`Program "${metadata.id}" does not exist in the source specification.`);
-  if (!["fd", "ts", "ns", "pg"].includes(metadata.track)) errors.push("Track must be fd, ts, ns, or pg.");
+  if (!["fd", "ts", "ns", "pg", "py"].includes(metadata.track)) errors.push("Track must be fd, ts, ns, pg, or py.");
   if (!["beginner", "intermediate", "advanced"].includes(metadata.level)) errors.push("Level is not supported.");
   if (!Number.isInteger(Number(metadata.estMinutes)) || Number(metadata.estMinutes) < 1) errors.push("estMinutes must be a positive integer.");
   if (!Array.isArray(metadata.os) || !["windows", "macos", "linux"].every((os) => metadata.os.includes(os))) errors.push("os must include windows, macos, and linux.");

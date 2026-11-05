@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 export function parsePrograms(source) {
-  const headings = [...source.matchAll(/^### ((?:FD|TS|NS|PG)-\d+) (.+)$/gm)];
+  const headings = [...source.matchAll(/^### ((?:FD|TS|NS|PG|PY)-\d+) (.+)$/gm)];
   return headings.map((heading, index) => {
     const start = heading.index + heading[0].length;
     const end = headings[index + 1]?.index ?? source.length;

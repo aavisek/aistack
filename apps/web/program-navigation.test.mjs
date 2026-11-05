@@ -28,6 +28,21 @@ test("path rows link to the program reader", async () => {
   const { content } = await browser("#path");
   assert.match(content.innerHTML, /href="#program\/FD-01"/);
   assert.match(content.innerHTML, /href="#program\/PG-01"/);
+  assert.match(content.innerHTML, /<h2>Python<\/h2>/);
+  assert.match(content.innerHTML, /href="#track\/PY"/);
+  assert.match(content.innerHTML, /href="#program\/PY-01"/);
+  assert.match(content.innerHTML, /Objects - Mutable and Immutable in Python/);
+  assert.match(content.innerHTML, /5 tracks · 171 programs/);
+});
+
+test("Python track route shows only Python and its program", async () => {
+  const { content, handlers } = await browser("#track/PY");
+  assert.match(content.innerHTML, /<h1>Python<\/h1>/);
+  assert.match(content.innerHTML, /1 programs/);
+  assert.match(content.innerHTML, /href="#program\/PY-01"/);
+  assert.match(content.innerHTML, /Objects - Mutable and Immutable in Python/);
+  assert.doesNotMatch(content.innerHTML, /TypeScript|PostgreSQL|Foundations/);
+  assert.match(content.innerHTML, /href="#path">Back to learning path/);
 });
 
 test("learning path lists all twelve Foundations programs before TS-01", async () => {

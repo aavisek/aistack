@@ -19,7 +19,7 @@ direct links (for example `/#program/FD-01`), previous/next navigation, a
 rendered source-spec tab, and returning to the path. Lessons are authored for
 FD-01 through FD-12 and TS-01 through TS-02; `/api/lessons` lists authored lessons and
 `/api/lessons/:id` returns a lesson. The `/api/programs/:code` endpoint still
-serves source requirements for all 170 programs.
+serves source requirements for all 171 programs, including the first Python topic.
 
 TS-01 starts with standalone Hello World, string, addition, and boolean
 programs. Beginners can pause after Step 6; the remaining primitive types,

@@ -388,7 +388,7 @@ Create these scripts and run them in CI (GitHub Actions):
 2. **`pnpm lessons:verify <ID>`** — extracts **file blocks** and **command blocks** and **executes them** in a clean temp directory (Docker container for PostgreSQL/Redis lessons): create the files exactly as shown, run the commands in order, and compare actual output to the **Expected output** blocks (ignoring regions marked as variable). Fails the build if any command fails or output differs materially.
    - TypeScript lessons: also run `tsc --noEmit` on the file blocks; the deliberate compile errors must produce the quoted error code (e.g. `TS2322`).
    - SQL lessons: run against a disposable `postgres:16` container and compare result sets.
-3. **`pnpm lessons:coverage`** — prints which of the 170 programs have a lesson, and which acceptance criteria from the source spec are mapped in `## Verify against the requirements`.
+3. **`pnpm lessons:coverage`** — prints which of the 171 programs have a lesson, and which acceptance criteria from the source spec are mapped in `## Verify against the requirements`.
 4. **Pull-request checklist** — a PR template listing R1–R12 for the author to tick.
 
 > If a command cannot be automatically verified (GitHub UI clicks, installing Docker), mark the block with `verify="manual"` and add the date and OS it was manually checked on.
