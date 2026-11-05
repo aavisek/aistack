@@ -32,17 +32,19 @@ test("path rows link to the program reader", async () => {
   assert.match(content.innerHTML, /href="#track\/PY"/);
   assert.match(content.innerHTML, /href="#program\/PY-01"/);
   assert.match(content.innerHTML, /Objects - Mutable and Immutable in Python/);
-  assert.match(content.innerHTML, /5 tracks · 172 programs/);
+  assert.match(content.innerHTML, /5 tracks · 173 programs/);
 });
 
 test("Python track route shows only Python and its programs", async () => {
   const { content } = await browser("#track/PY");
   assert.match(content.innerHTML, /<h1>Python<\/h1>/);
-  assert.match(content.innerHTML, /2 programs/);
+  assert.match(content.innerHTML, /3 programs/);
   assert.match(content.innerHTML, /href="#program\/PY-01"/);
   assert.match(content.innerHTML, /href="#program\/PY-02"/);
+  assert.match(content.innerHTML, /href="#program\/PY-03"/);
   assert.match(content.innerHTML, /Objects - Mutable and Immutable in Python/);
   assert.match(content.innerHTML, /Numbers, Booleans & Operators in Python/);
+  assert.match(content.innerHTML, /Strings, Indexing, Slicing & Encoding in Python/);
   assert.doesNotMatch(content.innerHTML, /TypeScript|PostgreSQL|Foundations/);
   assert.match(content.innerHTML, /href="#path">Back to learning path/);
 });

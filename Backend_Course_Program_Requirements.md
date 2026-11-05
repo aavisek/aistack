@@ -1,6 +1,6 @@
 # Backend Developer Course — Program Requirements Specification
 
-**Scope:** 172 unique programs — 12 Foundations (FD-01 to FD-12), 100 TypeScript (TS-01 to TS-100), 42 NestJS/Redis/BullMQ/AI (NS-01 to NS-42), 16 PostgreSQL (PG-01 to PG-16), and 2 Python topics (PY-01 to PY-02).
+**Scope:** 173 unique programs — 12 Foundations (FD-01 to FD-12), 100 TypeScript (TS-01 to TS-100), 42 NestJS/Redis/BullMQ/AI (NS-01 to NS-42), 16 PostgreSQL (PG-01 to PG-16), and 3 Python topics (PY-01 to PY-03).
 **Beginner note:** Start with Part 0 and follow the *Recommended Learning Order* table in it.
 **Source:** "Backend Developer Course for AI.txt". Duplicates removed: the PostgreSQL list appeared three times in the source (kept once), and the second NestJS 'Top 30' list overlapped with the first in 28 of 30 items (only 2 new programs added). The third list, a 'Top 50', overlapped in 39 of 50 items and added 11 new programs (NS-33 to NS-42 and PG-16). All overlaps are mapped in Part C.
 **How to use:** Each program has the same blocks: **Objective**, **Requirements** (what to build), **Input → Output**, **Acceptance criteria** (what "done" means), and **Tests** (minimum checks to write). Tick the checkbox when done.
@@ -40,7 +40,7 @@
 - Part B — NestJS Roadmap A: NS-01 … NS-30
 - Part C — NestJS additions (NS-31 … NS-42) and duplicate mapping tables for the 2nd and 3rd lists
 - Part D — PostgreSQL: PG-01 … PG-16
-- Part E — Python: PY-01 … PY-02
+- Part E — Python: PY-01 … PY-03
 
 ---
 
@@ -1830,7 +1830,7 @@ The Top 50 list was checked item by item. 38 of its 50 items duplicated programs
 
 ---
 
-# PART E — Python (PY-01 to PY-02)
+# PART E — Python (PY-01 to PY-03)
 
 ### PY-01 Objects - Mutable and Immutable in Python
 - [ ] **Objective:** Explain how Python names refer to objects and distinguish in-place mutation from rebinding.
@@ -1847,5 +1847,13 @@ The Top 50 list was checked item by item. 38 of its 50 items duplicated programs
 - **Input → Output:** A compact set of printed examples with values that illustrate Python's numeric and Boolean rules.
 - **Acceptance criteria:** The examples show that `/` produces a float, `//` floors toward negative infinity, `and`/`or` return operands, and float comparisons should use `math.isclose` when approximate equality is intended.
 - **Tests:** Run the script and compare its output with the expected results in the lesson.
+
+### PY-03 Strings, Indexing, Slicing & Encoding in Python
+- [ ] **Objective:** Select and rebuild string content and exchange Unicode text as correctly encoded bytes.
+- **Key concepts:** Immutable Unicode strings, positive and negative indexing, substring searches, exclusive slice bounds, strides, reversal, encoding and decoding, UTF-8, bytes and bytearray, normalization, casefold, and explicit file encodings.
+- **Requirements:** Write runnable examples that search strings, index and slice text, rebuild immutable strings, round-trip UTF-8 data, compare text and byte lengths, handle encoding errors explicitly, normalize equivalent Unicode sequences, and read and write a UTF-8 file.
+- **Input → Output:** Small standalone scripts with printed results demonstrating text selection and correct conversion between strings and bytes.
+- **Acceptance criteria:** Positive and negative indexing preserve string immutability; searches distinguish missing matches from position zero; slices demonstrate exclusive stops, clipped bounds, strides, and reversal; UTF-8 examples distinguish code points from bytes; encoding failures are surfaced without silent data loss; normalization and file I/O use explicit text conventions.
+- **Tests:** Run every script and compare its output with the lesson, including missing substrings, empty slices, incomplete UTF-8 bytes, and equivalent composed and decomposed text.
 
 *End of document.*

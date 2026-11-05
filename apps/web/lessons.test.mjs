@@ -10,13 +10,33 @@ test("all authored lessons have valid metadata and required ordered sections", a
   const codes = new Map(programs.map((program) => [program.code, program]));
   assert.deepEqual(lessons.map(({ id }) => id), [
     ...Array.from({ length: 12 }, (_, index) => `FD-${String(index + 1).padStart(2, "0")}`),
-    "PY-01", "PY-02",
+    "PY-01", "PY-02", "PY-03",
     "TS-01", "TS-02"
   ]);
   for (const lesson of lessons) {
     const source = await readFile(new URL(`../../content/lessons/${lesson.id}.md`, import.meta.url), "utf8");
     assert.deepEqual(validateLesson(source, `${lesson.id}.md`, codes), []);
   }
+});
+
+test("PY-03 covers all cheat-sheet topics and keeps its final Boolean program", async () => {
+  const lesson = (await loadLessons()).find(({ id }) => id === "PY-03");
+  assert.ok(lesson);
+  const sections = extractSections(lesson.markdown);
+  const steps = sections.filter(({ title }) => /^Step \d+:/.test(title));
+  assert.equal(steps.length, 17);
+  for (const section of [...steps, sections.at(-1)]) {
+    const fences = extractFences(section.body);
+    assert.ok(fences.some(({ info }) => /^python .* file$/.test(info)), section.title);
+    assert.ok(fences.some(({ info }) => info.includes('verify="run"')), section.title);
+    assert.ok(fences.some(({ info }) => info === 'text title="Expected output"'), section.title);
+  }
+  for (const topic of ["rindex", "slice_recipes.py", "utf-32", "cp1252",
+    "xmlcharrefreplace", "namereplace", "surrogateescape", "charset-normalizer",
+    "\\N{EURO SIGN}", "\\X", "utf-8-sig"]) {
+    assert.ok(lesson.markdown.includes(topic), `Missing cheat-sheet topic: ${topic}`);
+  }
+  assert.equal(sections.at(-1).title, "Final practice: Should You Go for a Walk?");
 });
 
 test("lesson parser extracts front matter, ordered sections, and executable metadata", () => {

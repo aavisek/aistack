@@ -17,9 +17,16 @@ Choose **Learning Path**, then select a row under **Programs in order** to read
 that program's lesson. **Continue** on Today opens TS-01. Program pages support
 direct links (for example `/#program/FD-01`), previous/next navigation, a
 rendered source-spec tab, and returning to the path. Lessons are authored for
-FD-01 through FD-12 and TS-01 through TS-02; `/api/lessons` lists authored lessons and
+FD-01 through FD-12, TS-01 through TS-02, and PY-01 through PY-03; `/api/lessons` lists authored lessons and
 `/api/lessons/:id` returns a lesson. The `/api/programs/:code` endpoint still
-serves source requirements for all 172 programs, including the first two Python topics.
+serves source requirements for all 173 programs, including the first three Python topics.
+
+PY-03 covers strings, indexing, slicing, Unicode, and encoding, based on the
+[strings cheat sheet](./course_details/Python/Python_Strings_Index_Slice_Encoding_Cheat_Sheet.pdf).
+Its seventeen standalone topic examples cover the full cheat sheet, including UTF-8
+file I/O, encoding error handlers, mojibake, Unicode escapes, and grapheme limitations.
+A final Boolean program reproduces the sheet's walking exercise.
+Run `npm run lessons:verify PY-03` to execute and check them.
 
 TS-01 starts with standalone Hello World, string, addition, and boolean
 programs. Beginners can pause after Step 6; the remaining primitive types,
