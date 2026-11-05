@@ -26,6 +26,10 @@ PY-03 covers strings, indexing, slicing, Unicode, and encoding, based on the
 Its seventeen standalone topic examples cover the full cheat sheet, including UTF-8
 file I/O, encoding error handlers, mojibake, Unicode escapes, and grapheme limitations.
 A final Boolean program reproduces the sheet's walking exercise.
+
+Lessons with a cheat sheet (currently PY-01, PY-02 and PY-03; see `apps/web/cheatsheets.mjs`) link to it from the
+final Recap card. The sheet opens in a scrollable, view-only reader: the server renders each PDF page to a
+PNG (`/api/cheatsheets/:id/pages/:n.png`) and never serves the PDF file itself.
 Run `npm run lessons:verify PY-03` to execute and check them.
 
 TS-01 starts with standalone Hello World, string, addition, and boolean

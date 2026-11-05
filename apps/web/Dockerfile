@@ -11,6 +11,7 @@ RUN npx playwright install --with-deps chromium \
 COPY apps/web ./apps/web
 COPY infra/postgres ./infra/postgres
 COPY content/lessons ./content/lessons
+COPY course_details/Python ./course_details/Python
 COPY Backend_Course_Program_Requirements.md ./
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0

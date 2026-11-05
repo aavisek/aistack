@@ -122,3 +122,13 @@
   .lesson-navigation { gap: 7px; }
   .lesson-navigation a { justify-content: center; min-height: 44px; padding: 8px; }
 }
+
+.cheat-sheet-link { display: flex; align-items: center; gap: 12px; margin-top: 18px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; color: inherit; text-decoration: none; }
+.cheat-sheet-link > span:nth-child(2) { flex: 1; display: grid; }
+.cheat-sheet-link small { opacity: .7; }
+.cheat-sheet-link:hover { border-color: var(--accent); }
+.cheat-sheet-viewer { display: grid; gap: 16px; max-width: 900px; margin: 0 auto; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.cheat-sheet-page { margin: 0; }
+.cheat-sheet-page img { display: block; width: 100%; height: auto; background: #fff; border-radius: 8px; pointer-events: none; }
+.cheat-sheet-page figcaption { margin-top: 6px; text-align: center; font-size: 12px; opacity: .65; }
+@media print { .cheat-sheet-viewer { display: none; } }

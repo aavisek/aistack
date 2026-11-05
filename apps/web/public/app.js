@@ -199,7 +199,7 @@ function markdownSectionHeadings(markdown) {
   }
   return headings;
 }
-function lessonCards(markdown, highlightedCode = {}) {
+function lessonCards(markdown, highlightedCode = {}, cheatSheet = null) {
   const headings = markdownSectionHeadings(markdown);
   const sections = headings.map((heading, index) => ({
     title: heading.title,
@@ -221,14 +221,14 @@ function lessonCards(markdown, highlightedCode = {}) {
       cards.push({ title: section.title, label: step ? "WALKTHROUGH" : "REFERENCE", html: renderMarkdown(section.body, highlightedCode) });
     }
   }
-  cards.push({ title: "Recap", label: "FINISH", html: `<ul>${(sections.find(({ title }) => title === "Recap")?.body.match(/^\s*-\s+.+$/gm) ?? []).map((line) => `<li>${inlineMarkdown(line.replace(/^\s*-\s+/, ""))}</li>`).join("")}</ul><button class="primary" type="button" data-action="mark-understood">Mark understood</button>` });
+  cards.push({ title: "Recap", label: "FINISH", html: `<ul>${(sections.find(({ title }) => title === "Recap")?.body.match(/^\s*-\s+.+$/gm) ?? []).map((line) => `<li>${inlineMarkdown(line.replace(/^\s*-\s+/, ""))}</li>`).join("")}</ul><button class="primary" type="button" data-action="mark-understood">Mark understood</button>${cheatSheet ? `<a class="cheat-sheet-link" href="#cheatsheet/${encodeURIComponent(cheatSheet.id)}"><span aria-hidden="true">▤</span><span><strong>Cheat sheet</strong><small>${escapeHtml(cheatSheet.title)} · view only</small></span><span aria-hidden="true">→</span></a>` : ""}` });
   return cards;
 }
 function safeStorageGet(key, fallback) {
   try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
 }
 function renderStudy(lesson, program) {
-  const cards = lessonCards(lesson.markdown, lesson.highlightedCode ?? {});
+  const cards = lessonCards(lesson.markdown, lesson.highlightedCode ?? {}, lesson.cheatSheet);
   const key = `lesson-position-${lesson.id}`;
   const startAt = Math.min(Number(safeStorageGet(key, "0")) || 0, cards.length - 1);
   const slideMarkup = cards.map((card, index) => `<article class="lesson-slide panel" data-card-index="${index}" aria-label="${escapeHtml(card.title)}"><header class="lesson-slide-header"><span class="eyebrow">${escapeHtml(card.label)}</span><h2>${escapeHtml(card.title)}</h2></header><div class="lesson-slide-content">${card.html}</div></article>`).join("");
@@ -292,13 +292,30 @@ async function openProgram(code) {
     content.innerHTML = `<section class="panel empty" role="alert"><h2>Unable to open program</h2><p>${escapeHtml(error instanceof Error ? error.message : "An unexpected error occurred.")}</p><button class="primary" data-action="retry-program">Try again</button> <a class="link" href="#path">Back to learning path</a></section>`;
   }
 }
+async function openCheatSheet(id) {
+  const route = location.hash;
+  shell("path");
+  content.innerHTML = '<section class="panel empty" role="status">Loading cheat sheet...</section>';
+  try {
+    const response = await fetch(`/api/cheatsheets/${encodeURIComponent(id)}`);
+    if (!response.ok) throw new Error(response.status === 404 ? "Cheat sheet not found." : "Could not load the cheat sheet. Please try again.");
+    const { data } = await response.json();
+    if (location.hash !== route) return;
+    const pageMarkup = Array.from({ length: data.pageCount }, (_, index) => `<figure class="cheat-sheet-page"><img src="/api/cheatsheets/${encodeURIComponent(id)}/pages/${index + 1}.png" alt="${escapeHtml(data.title)}, page ${index + 1} of ${data.pageCount}" loading="${index < 2 ? "eager" : "lazy"}" draggable="false"><figcaption>Page ${index + 1} of ${data.pageCount}</figcaption></figure>`).join("");
+    content.innerHTML = `<div class="view-title"><a class="link" href="#program/${encodeURIComponent(id)}">Back to ${escapeHtml(id)}</a><span class="tag">${escapeHtml(id)} · CHEAT SHEET</span><h1>${escapeHtml(data.title)}</h1><p>${data.pageCount} pages · Scroll to read · View only</p></div><section class="cheat-sheet-viewer" aria-label="${escapeHtml(data.title)} cheat sheet">${pageMarkup}</section>`;
+    content.querySelector(".cheat-sheet-viewer").addEventListener("contextmenu", (event) => event.preventDefault());
+  } catch (error) {
+    if (location.hash !== route) return;
+    content.innerHTML = `<section class="panel empty" role="alert"><h2>Unable to open cheat sheet</h2><p>${escapeHtml(error instanceof Error ? error.message : "An unexpected error occurred.")}</p><a class="link" href="#path">Back to learning path</a></section>`;
+  }
+}
 function applyOsChoice(group, os) {
   const available = [...group.querySelectorAll(".os-tab")].map((button) => button.dataset.os);
   const selected = available.includes(os) ? os : available[0];
   group.querySelectorAll(".os-tab").forEach((button) => button.classList.toggle("active", button.dataset.os === selected));
   group.querySelectorAll(".os-pane").forEach((pane) => { pane.hidden = pane.dataset.os !== selected; pane.classList.toggle("active", pane.dataset.os === selected); });
 }
-function render() { const view = location.hash.slice(1) || "today"; content.onclick = null; content.onsubmit = null; content.onchange = null; if (view.startsWith("program/")) { openProgram(view.slice("program/".length)); return; } if (view.startsWith("track/")) { shell("path"); const code = view.slice("track/".length); const track = tracks.find((item) => item.code === code); crumb.textContent = track?.name ?? "Learning path"; content.innerHTML = trackView(code); return; } shell(view.startsWith("jd/") ? "jd" : view); if (view === "jd" || view.startsWith("jd/")) { crumb.textContent = "JD Intelligence"; window.JdView.open(content); return; } content.innerHTML = ({today, path, review, saved, me}[view] ?? today)(); if(view==="path") document.querySelector("#search").addEventListener("input", filterPrograms); }
+function render() { const view = location.hash.slice(1) || "today"; content.onclick = null; content.onsubmit = null; content.onchange = null; if (view.startsWith("program/")) { openProgram(view.slice("program/".length)); return; } if (view.startsWith("cheatsheet/")) { openCheatSheet(decodeURIComponent(view.slice("cheatsheet/".length))); return; } if (view.startsWith("track/")) { shell("path"); const code = view.slice("track/".length); const track = tracks.find((item) => item.code === code); crumb.textContent = track?.name ?? "Learning path"; content.innerHTML = trackView(code); return; } shell(view.startsWith("jd/") ? "jd" : view); if (view === "jd" || view.startsWith("jd/")) { crumb.textContent = "JD Intelligence"; window.JdView.open(content); return; } content.innerHTML = ({today, path, review, saved, me}[view] ?? today)(); if(view==="path") document.querySelector("#search").addEventListener("input", filterPrograms); }
 function filterPrograms(event) { const query = event.target.value.toLowerCase(); document.querySelector("#programs").innerHTML = programs.filter(p => p.join(" ").toLowerCase().includes(query)).map((p,i)=>row(p,i)).join("") || `<section class="panel empty"><h2>No matching programs</h2><p>Try a track code or keyword.</p></section>`; }
 function goToCard(offset) {
   const stack = content.querySelector(".lesson-card-stack");
