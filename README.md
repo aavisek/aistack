@@ -17,20 +17,27 @@ Choose **Learning Path**, then select a row under **Programs in order** to read
 that program's lesson. **Continue** on Today opens TS-01. Program pages support
 direct links (for example `/#program/FD-01`), previous/next navigation, a
 rendered source-spec tab, and returning to the path. Lessons are authored for
-FD-01 through FD-12, TS-01 through TS-02, and PY-01 through PY-03; `/api/lessons` lists authored lessons and
+FD-01 through FD-12, TS-01 through TS-02, and PY-01 through PY-09; `/api/lessons` lists authored lessons and
 `/api/lessons/:id` returns a lesson. The `/api/programs/:code` endpoint still
-serves source requirements for all 173 programs, including the first three Python topics.
+serves source requirements for all 179 programs, including the nine Python topics.
 
 PY-03 covers strings, indexing, slicing, Unicode, and encoding, based on the
 [strings cheat sheet](./course_details/Python/Python_Strings_Index_Slice_Encoding_Cheat_Sheet.pdf).
 Its seventeen standalone topic examples cover the full cheat sheet, including UTF-8
 file I/O, encoding error handlers, mojibake, Unicode escapes, and grapheme limitations.
 A final Boolean program reproduces the sheet's walking exercise.
+Run `npm run lessons:verify PY-03` to execute and check them.
 
-Lessons with a cheat sheet (currently PY-01, PY-02 and PY-03; see `apps/web/cheatsheets.mjs`) link to it from the
+PY-04 covers lists and their methods and operators, based on the
+[lists cheat sheet](./course_details/Python/Python_Lists_Cheat_Sheet.pdf). Its ten standalone steps and
+final movie watchlist program reproduce the full sheet; run `npm run lessons:verify PY-04` to check them.
+
+PY-05 to PY-09 each follow one cheat sheet from `course_details/Python/`: sets and frozensets, dictionaries,
+the `collections` module, the built-in data types, and operator overloading with `bytearray`.
+
+Lessons with a cheat sheet (currently PY-01 through PY-09; see `apps/web/cheatsheets.mjs`) link to it from the
 final Recap card. The sheet opens in a scrollable, view-only reader: the server renders each PDF page to a
 PNG (`/api/cheatsheets/:id/pages/:n.png`) and never serves the PDF file itself.
-Run `npm run lessons:verify PY-03` to execute and check them.
 
 TS-01 starts with standalone Hello World, string, addition, and boolean
 programs. Beginners can pause after Step 6; the remaining primitive types,

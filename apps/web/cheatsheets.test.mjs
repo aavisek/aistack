@@ -9,6 +9,8 @@ test("cheat sheets are connected to their lessons only", () => {
   assert.equal(cheatSheetFor("PY-02")?.title, "Python Numbers, Booleans & Operators");
   assert.equal(cheatSheetFor("PY-03")?.title, "Python Strings: Index, Slice & Encoding");
   assert.equal(cheatSheetFor("PY-01")?.title, "Python Tuples & Membership Testing");
+  assert.equal(cheatSheetFor("PY-04")?.title, "Python Lists");
+  for (const id of ["PY-05", "PY-06", "PY-07", "PY-08", "PY-09"]) assert.ok(cheatSheetFor(id), id);
   assert.equal(cheatSheetFor("FD-01"), undefined);
   assert.equal(cheatSheetFor("__proto__"), undefined);
 });

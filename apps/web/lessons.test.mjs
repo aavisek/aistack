@@ -10,7 +10,7 @@ test("all authored lessons have valid metadata and required ordered sections", a
   const codes = new Map(programs.map((program) => [program.code, program]));
   assert.deepEqual(lessons.map(({ id }) => id), [
     ...Array.from({ length: 12 }, (_, index) => `FD-${String(index + 1).padStart(2, "0")}`),
-    "PY-01", "PY-02", "PY-03",
+    "PY-01", "PY-02", "PY-03", "PY-04", "PY-05", "PY-06", "PY-07", "PY-08", "PY-09",
     "TS-01", "TS-02"
   ]);
   for (const lesson of lessons) {
@@ -37,6 +37,24 @@ test("PY-03 covers all cheat-sheet topics and keeps its final Boolean program", 
     assert.ok(lesson.markdown.includes(topic), `Missing cheat-sheet topic: ${topic}`);
   }
   assert.equal(sections.at(-1).title, "Final practice: Should You Go for a Walk?");
+});
+
+test("PY-04 covers the lists cheat sheet and ends with the watchlist program", async () => {
+  const lesson = (await loadLessons()).find(({ id }) => id === "PY-04");
+  assert.ok(lesson);
+  const sections = extractSections(lesson.markdown);
+  const steps = sections.filter(({ title }) => /^Step \d+:/.test(title));
+  assert.equal(steps.length, 10);
+  for (const section of [...steps, sections.at(-1)]) {
+    const fences = extractFences(section.body);
+    assert.ok(fences.some(({ info }) => /^python .* file$/.test(info)), section.title);
+    assert.ok(fences.some(({ info }) => info.includes('verify="run"')), section.title);
+    assert.ok(fences.some(({ info }) => info === 'text title="Expected output"'), section.title);
+  }
+  for (const topic of ["append(", "insert(", "remove(", "pop(", "extend(", "sort(", "reverse(", "sorted(", "copy(", "clear(", "split(", "join("]) {
+    assert.ok(lesson.markdown.includes(topic), `Missing cheat-sheet topic: ${topic}`);
+  }
+  assert.equal(sections.at(-1).title, "Final practice: Movie Watchlist");
 });
 
 test("lesson parser extracts front matter, ordered sections, and executable metadata", () => {
