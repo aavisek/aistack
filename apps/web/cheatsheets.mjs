@@ -15,6 +15,18 @@ export const cheatSheets = {
   "PY-07": { title: "Python collections Module", file: "03_Python_Collections_Advanced_Data_Types_Cheat_Sheet.pdf" },
   "PY-08": { title: "Python Data Types", file: "04_Python_Data_Types_Cheat_Sheet.pdf" },
   "PY-09": { title: "Python Operator Overloading & bytearray", file: "05_Python_Operator_Overloading_and_bytearray_Cheat_Sheet.pdf" },
+  "PY-10": { title: "Python Conditionals", file: "01_Conditionals_in_Python.pdf" },
+  "PY-11": { title: "Smart Thermostat System", file: "02_Smart_Thermostat_System.pdf" },
+  "PY-12": { title: "Loan Eligibility Checker", file: "03_Loan_Eligibility_Checker.pdf" },
+  "PY-13": { title: "Introduction to Loops", file: "04_Introduction_to_Loops.pdf" },
+  "PY-14": { title: "Looping Through Lists", file: "05_Looping_Through_Lists.pdf" },
+  "PY-15": { title: "Why Use enumerate", file: "06_Why_Use_enumerate.pdf" },
+  "PY-16": { title: "Combining Lists with zip", file: "07_zip_Combines_Lists.pdf" },
+  "PY-17": { title: "Introducing while Loops", file: "08_Introducing_while_Loops.pdf" },
+  "PY-18": { title: "Break, Continue & Loop Else", file: "09_Break_Continue_and_Loop_Else.pdf" },
+  "PY-19": { title: "Dictionary in Place of Match Case", file: "10_Dictionary_in_Place_of_Match_Case.pdf" },
+  "PY-20": { title: "The Walrus Operator", file: "11_Walrus_Operator.pdf" },
+  "PY-21": { title: "Loops in Python", file: "12_Loops_in_Python.pdf" },
   "PY-03": { title: "Python Strings: Index, Slice & Encoding", file: "Python_Strings_Index_Slice_Encoding_Cheat_Sheet.pdf" }
 };
 

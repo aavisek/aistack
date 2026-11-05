@@ -3,7 +3,7 @@ const tracks = [
   { code: "TS", name: "TypeScript", count: 100, progress: 18, color: "#51d4cf", description: "From strict typing to production Node patterns." },
   { code: "NS", name: "NestJS & Redis", count: 42, progress: 6, color: "#ff7487", description: "Design APIs, queues, caches and workers." },
   { code: "PG", name: "PostgreSQL", count: 16, progress: 0, color: "#8b7cff", description: "Model, query and scale reliable data systems." },
-  { code: "PY", name: "Python", count: 9, progress: 0, color: "#f0c75e", description: "Build a strong foundation in Python and its object model." }
+  { code: "PY", name: "Python", count: 21, progress: 0, color: "#f0c75e", description: "Build a strong foundation in Python and its object model." }
 ];
 const programs = [
   ["FD-01", "Git & npm Essentials", "Foundations", "completed"],
@@ -31,7 +31,19 @@ const programs = [
   ["PY-06", "Dictionaries in Python", "Python", "upcoming"],
   ["PY-07", "The collections Module: Advanced Data Types in Python", "Python", "upcoming"],
   ["PY-08", "Python Data Types: Choosing the Right Type", "Python", "upcoming"],
-  ["PY-09", "Operator Overloading & bytearray in Python", "Python", "upcoming"]
+  ["PY-09", "Operator Overloading & bytearray in Python", "Python", "upcoming"],
+  ["PY-10", "Conditionals in Python", "Python", "upcoming"],
+  ["PY-11", "Smart Thermostat System in Python", "Python", "upcoming"],
+  ["PY-12", "Loan Eligibility Checker in Python", "Python", "upcoming"],
+  ["PY-13", "Introduction to Loops in Python", "Python", "upcoming"],
+  ["PY-14", "Looping Through Lists in Python", "Python", "upcoming"],
+  ["PY-15", "Why Use enumerate in Python", "Python", "upcoming"],
+  ["PY-16", "Combining Lists with zip in Python", "Python", "upcoming"],
+  ["PY-17", "Introducing while Loops in Python", "Python", "upcoming"],
+  ["PY-18", "Break, Continue & Loop Else in Python", "Python", "upcoming"],
+  ["PY-19", "Dictionary in Place of Match Case in Python", "Python", "upcoming"],
+  ["PY-20", "The Walrus Operator in Python", "Python", "upcoming"],
+  ["PY-21", "Loops in Python: Complete Reference", "Python", "upcoming"]
 ];
 const state = JSON.parse(localStorage.getItem("ai-mastery-state") ?? '{"saved":[],"completed":3}');
 const content = document.querySelector("#content");
@@ -56,7 +68,7 @@ function trackView(code) {
   const trackPrograms = programs.filter((program) => program[2] === track.name);
   return `<div class="view-title"><a class="link" href="#path">Back to learning path</a><span class="eyebrow">${escapeHtml(track.code)} track</span><h1>${escapeHtml(track.name)}</h1><p>${escapeHtml(track.description)}</p></div><section class="panel track-card track-detail"><span class="tag" style="background:${track.color}22;color:${track.color}">${escapeHtml(track.code)}</span><h2>${escapeHtml(track.name)}</h2><p>${escapeHtml(track.description)}</p><div class="track-meta"><span>${trackPrograms.length} programs</span><span>${track.progress}% complete</span></div><div class="bar"><i style="width:${track.progress}%;background:${track.color}"></i></div></section><div class="section-head" style="margin-top:34px"><h2>${escapeHtml(track.name)} programs</h2></div><div class="program-list">${trackPrograms.map((program, index) => row(program, index)).join("")}</div>`;
 }
-function path() { return `<div class="view-title"><span class="eyebrow">The roadmap</span><h1>Your learning path</h1><p>179 programs, sequenced from first principles to production systems.</p></div><div class="path-toolbar"><div class="section-head" style="margin:0"><h2>Tracks</h2><span class="link">5 tracks · 179 programs</span></div><input class="search" id="search" placeholder="Search programs..." /></div><div class="track-grid">${tracks.map(t=>`<${t.code === "PY" ? "a href=\"#track/PY\"" : "article"} class="panel track-card${t.code === "PY" ? " track-card-link" : ""}"><span class="tag" style="background:${t.color}22;color:${t.color}">${t.code}</span><h2>${t.name}</h2><p>${t.description}</p><div class="track-meta"><span>${t.count} programs</span><span>${t.progress}% complete</span></div><div class="bar"><i style="width:${t.progress}%;background:${t.color}"></i></div></${t.code === "PY" ? "a" : "article"}>`).join("")}</div><div class="section-head" style="margin-top:34px"><h2>Programs in order</h2></div><div class="program-list" id="programs">${programs.map((p,i)=>row(p,i)).join("")}</div>`; }
+function path() { return `<div class="view-title"><span class="eyebrow">The roadmap</span><h1>Your learning path</h1><p>191 programs, sequenced from first principles to production systems.</p></div><div class="path-toolbar"><div class="section-head" style="margin:0"><h2>Tracks</h2><span class="link">5 tracks · 191 programs</span></div><input class="search" id="search" placeholder="Search programs..." /></div><div class="track-grid">${tracks.map(t=>`<${t.code === "PY" ? "a href=\"#track/PY\"" : "article"} class="panel track-card${t.code === "PY" ? " track-card-link" : ""}"><span class="tag" style="background:${t.color}22;color:${t.color}">${t.code}</span><h2>${t.name}</h2><p>${t.description}</p><div class="track-meta"><span>${t.count} programs</span><span>${t.progress}% complete</span></div><div class="bar"><i style="width:${t.progress}%;background:${t.color}"></i></div></${t.code === "PY" ? "a" : "article"}>`).join("")}</div><div class="section-head" style="margin-top:34px"><h2>Programs in order</h2></div><div class="program-list" id="programs">${programs.map((p,i)=>row(p,i)).join("")}</div>`; }
 function review() { return `<div class="view-title"><span class="eyebrow">Spaced repetition</span><h1>Review queue</h1><p>Short sessions that make what you learn stick.</p></div><div class="review-grid"><section class="panel review-card"><span class="tag">REVIEW 01 · TS-01</span><h2>What does <code>strict: true</code> enable?</h2><p>Choose the best answer, then compare the explanation. There are 3 reviews due today.</p><div class="quiz-options"><button>It enables all strict type-checking options.</button><button>It only checks unused variables.</button><button>It disables implicit type inference.</button></div></section><aside class="panel side-summary"><h3>Today’s review</h3><div class="summary-row"><span>Due now</span><strong>3 cards</strong></div><div class="summary-row"><span>Estimated time</span><strong>8 min</strong></div><div class="summary-row"><span>Retention</span><strong style="color:var(--green)">92%</strong></div></aside></div>`; }
 function saved() { return `<div class="view-title"><span class="eyebrow">Your library</span><h1>Saved for later</h1><p>Bookmarks and notes stay local for now and can move to the API in Phase 4.</p></div><section class="panel empty"><div style="font-size:32px;color:var(--accent)">♡</div><h2>Your saved cards will appear here</h2><p>Save a useful concept while studying to build your personal reference library.</p><a class="link" href="#today">Return to today →</a></section>`; }
 function me() { return `<div class="view-title"><span class="eyebrow">Your workspace</span><h1>Alex Morgan</h1><p>Keep showing up. The system is working.</p></div><div class="stats-grid"><div class="stat"><span class="stat-label">All-time study</span><div class="stat-value">18h 24m</div></div><div class="stat"><span class="stat-label">Longest streak</span><div class="stat-value">14 days</div></div><div class="stat"><span class="stat-label">Cards viewed</span><div class="stat-value">246</div></div><div class="stat"><span class="stat-label">Mastery</span><div class="stat-value">12%</div></div></div><section class="panel" style="padding:24px"><div class="section-head"><h2>Settings</h2></div><div class="summary-row"><span>Theme</span><strong>Dark · Auto</strong></div><div class="summary-row"><span>Daily goal</span><strong>2 programs</strong></div><div class="summary-row"><span>Storage</span><strong style="color:var(--green)">Local only</strong></div></section>`; }
@@ -308,7 +320,7 @@ async function openCheatSheet(id) {
     const { data } = await response.json();
     if (location.hash !== route) return;
     const pageMarkup = Array.from({ length: data.pageCount }, (_, index) => `<figure class="cheat-sheet-page"><img src="/api/cheatsheets/${encodeURIComponent(id)}/pages/${index + 1}.png" alt="${escapeHtml(data.title)}, page ${index + 1} of ${data.pageCount}" loading="${index < 2 ? "eager" : "lazy"}" draggable="false"><figcaption>Page ${index + 1} of ${data.pageCount}</figcaption></figure>`).join("");
-    content.innerHTML = `<div class="view-title"><a class="link" href="#program/${encodeURIComponent(id)}">Back to ${escapeHtml(id)}</a><span class="tag">${escapeHtml(id)} · CHEAT SHEET</span><h1>${escapeHtml(data.title)}</h1><p>${data.pageCount} pages · Scroll to read · View only</p></div><section class="cheat-sheet-viewer" aria-label="${escapeHtml(data.title)} cheat sheet">${pageMarkup}</section>`;
+    content.innerHTML = `<div class="view-title"><a class="link" href="#program/${encodeURIComponent(id)}">Back to ${escapeHtml(id)}</a><span class="tag">${escapeHtml(id)} · CHEAT SHEET</span><h1>${escapeHtml(data.title)}</h1><p>${data.pageCount} ${data.pageCount === 1 ? "page" : "pages"} · Scroll to read · View only</p></div><section class="cheat-sheet-viewer" aria-label="${escapeHtml(data.title)} cheat sheet">${pageMarkup}</section>`;
     content.querySelector(".cheat-sheet-viewer").addEventListener("contextmenu", (event) => event.preventDefault());
   } catch (error) {
     if (location.hash !== route) return;
