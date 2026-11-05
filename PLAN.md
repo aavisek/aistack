@@ -9,7 +9,7 @@
 
 A personal, mobile-first web app where I **read and understand** a curated roadmap of backend programs every day by scrolling swipeable study cards, **without re-writing code each time**. The app is the home of my learning path to becoming a backend developer and, later, an AI engineer.
 
-- **Today (v1):** Learn from a fixed catalogue of 170 programs (Foundations, TypeScript, NestJS/Redis/BullMQ, PostgreSQL) shown as study cards, with progress tracking, spaced-repetition review, notes, bookmarks and a daily feed.
+- **Today (v1):** Learn from a fixed catalogue of 172 programs (Foundations, Python, TypeScript, NestJS/Redis/BullMQ, PostgreSQL) shown as study cards, with progress tracking, spaced-repetition review, notes, bookmarks and a daily feed.
 - **Later (v2+):** Add the AI stack on top of the same platform: embeddings and semantic search (pgvector), an AI tutor with permission-aware RAG, an MCP server exposing my study data, an LLM gateway with fallback, tracing and PII redaction.
 
 **Guiding idea — dogfooding:** the platform's own features are the programs I am learning (auth = NS-14, queues = NS-17, caching = NS-19, RLS = PG-13, FTS = PG-11, tracing = NS-30, …). Building each feature **is** practising that program, and the app then teaches the program. Section 11 maps features to programs.
@@ -71,7 +71,7 @@ ai-mastery/
 │  └─ tsconfig/
 ├─ content/
 │  ├─ source/
-│  │  └─ Backend_Course_Program_Requirements.md   # source of truth (170 programs)
+│  │  └─ Backend_Course_Program_Requirements.md   # source of truth (172 programs)
 │  └─ lessons/             # authored Markdown lessons, one per program: FD-01.md ...
 ├─ docs/
 │  └─ lesson-format.md     # lesson metadata, section, and code-fence conventions
@@ -133,7 +133,7 @@ code fragments.
 - Authored Markdown lessons in `content/lessons/*.md` are validated separately from source requirements.
 - Import is **idempotent**: upsert by `code`; store a `content_hash`; only update when the hash changes; bump `version`.
 - A validation report lists programs missing any required field. **Import must fail the CI check if a program has no objective or acceptance criteria.**
-- Parse result must equal **170 programs** (12 FD, 100 TS, 42 NS, 16 PG). Add this as a test.
+- Parse result must equal **172 programs** (12 FD, 100 TS, 42 NS, 16 PG, 2 PY). Add this as a test.
 - The "Duplicate Mapping" tables and the "Recommended Learning Order" table are parsed too (Section 5.5), not shown as programs.
 
 ### 5.5 Learning order
@@ -303,13 +303,13 @@ Job rules: retries with exponential backoff (max 5), dead-letter handling, `remo
 ### Phase 1 — Content Pipeline (no UI yet)
 - [ ] Prisma schema for Track, Level, Program, ProgramPrereq, Card, Quiz, ContentImport; first migration.
 - [ ] `packages/content-parser` (or `apps/worker/src/content`): parse the source Markdown into typed objects (Section 5.4).
-- [ ] Unit tests with fixtures: one per program type, plus a **full-file test asserting 170 programs** with exact counts per track (12/100/42/16) and no missing required fields.
+- [ ] Unit tests with fixtures: one per program type, plus a **full-file test asserting 172 programs** with exact counts per track (12/100/42/16/2) and no missing required fields.
 - [ ] Lesson importer: validate front matter and required lesson sections in `content/lessons/*.md` (Section 5.3), then map sections to `intro`, `setup`, `step`, `concept`, `verify`, `errors`, `practice`, `quiz`, and `recap` cards.
 - [ ] Keep parsed source requirements available in the separate **Spec** view; remove source progress checkboxes when rendering.
 - [ ] Idempotent importer (upsert, hash, version bump) as a CLI: `pnpm content:import`.
 - [ ] Parse "Recommended Learning Order" into `stageNo` / `orderInPath`.
 
-**Acceptance:** Running the import twice yields the same DB state; all 170 source programs exist; lesson cards are generated for authored lessons and the Spec view is available for every program.
+**Acceptance:** Running the import twice yields the same DB state; all 172 source programs exist; lesson cards are generated for authored lessons and the Spec view is available for every program.
 
 ### Phase 2 — API Read Side
 - [ ] NestJS app skeleton: config, Prisma module, global pipes/filters/interceptors, request-id middleware, pino logging, Swagger, health endpoints.
@@ -467,7 +467,7 @@ Use these in Copilot Chat / Agent mode with this file open (`#file:PLAN.md`).
 > Read `PLAN.md` and `.github/copilot-instructions.md`. Implement **Phase 0** only. Create the pnpm monorepo, Docker Compose infra, strict TS configs, lint/format tooling and CI exactly as specified. Do not start Phase 1. When done, list what you created and how I verify the acceptance criteria.
 
 **Phase 1**
-> Implement **Phase 1 — Content Pipeline**. Write the Prisma schema from section 6 for the listed models, then build the Markdown parser described in section 5.4 using `content/source/Backend_Course_Program_Requirements.md`. Write tests first: a test that asserts exactly 170 programs (FD 12, TS 100, NS 42, PG 16) and that every program has objective, requirements, acceptance criteria and tests. Then build the idempotent importer CLI.
+> Implement **Phase 1 — Content Pipeline**. Write the Prisma schema from section 6 for the listed models, then build the Markdown parser described in section 5.4 using `content/source/Backend_Course_Program_Requirements.md`. Write tests first: a test that asserts exactly 172 programs (FD 12, TS 100, NS 42, PG 16, PY 2) and that every program has objective, requirements, acceptance criteria and tests. Then build the idempotent importer CLI.
 
 **Any later phase**
 > Implement **Phase N** from `PLAN.md`, one task at a time. For each task: state the plan in 3–5 bullets, make the change, add tests, and show how to check the acceptance criteria. Follow section 13 standards. Ask me before adding any dependency not listed in section 3.

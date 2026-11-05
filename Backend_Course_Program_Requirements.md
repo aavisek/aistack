@@ -1,6 +1,6 @@
 # Backend Developer Course — Program Requirements Specification
 
-**Scope:** 171 unique programs — 12 Foundations (FD-01 to FD-12), 100 TypeScript (TS-01 to TS-100), 42 NestJS/Redis/BullMQ/AI (NS-01 to NS-42), 16 PostgreSQL (PG-01 to PG-16), and 1 Python topic (PY-01).
+**Scope:** 172 unique programs — 12 Foundations (FD-01 to FD-12), 100 TypeScript (TS-01 to TS-100), 42 NestJS/Redis/BullMQ/AI (NS-01 to NS-42), 16 PostgreSQL (PG-01 to PG-16), and 2 Python topics (PY-01 to PY-02).
 **Beginner note:** Start with Part 0 and follow the *Recommended Learning Order* table in it.
 **Source:** "Backend Developer Course for AI.txt". Duplicates removed: the PostgreSQL list appeared three times in the source (kept once), and the second NestJS 'Top 30' list overlapped with the first in 28 of 30 items (only 2 new programs added). The third list, a 'Top 50', overlapped in 39 of 50 items and added 11 new programs (NS-33 to NS-42 and PG-16). All overlaps are mapped in Part C.
 **How to use:** Each program has the same blocks: **Objective**, **Requirements** (what to build), **Input → Output**, **Acceptance criteria** (what "done" means), and **Tests** (minimum checks to write). Tick the checkbox when done.
@@ -40,7 +40,7 @@
 - Part B — NestJS Roadmap A: NS-01 … NS-30
 - Part C — NestJS additions (NS-31 … NS-42) and duplicate mapping tables for the 2nd and 3rd lists
 - Part D — PostgreSQL: PG-01 … PG-16
-- Part E — Python: PY-01
+- Part E — Python: PY-01 … PY-02
 
 ---
 
@@ -1830,7 +1830,7 @@ The Top 50 list was checked item by item. 38 of its 50 items duplicated programs
 
 ---
 
-# PART E — Python (PY-01)
+# PART E — Python (PY-01 to PY-02)
 
 ### PY-01 Objects - Mutable and Immutable in Python
 - [ ] **Objective:** Explain how Python names refer to objects and distinguish in-place mutation from rebinding.
@@ -1839,5 +1839,13 @@ The Top 50 list was checked item by item. 38 of its 50 items duplicated programs
 - **Input → Output:** A short script with printed values that make mutation and rebinding visible.
 - **Acceptance criteria:** The demonstration shows an aliased list after in-place mutation, preserves the old integer value after rebinding, and shows that a tuple can contain a mutable object.
 - **Tests:** Run the script and confirm each printed value matches the expected object behavior.
+
+### PY-02 Numbers, Booleans & Operators in Python
+- [ ] **Objective:** Choose numeric types and operators appropriately, and predict how Python evaluates Boolean expressions.
+- **Key concepts:** Integers, floats, complex numbers, booleans, conversions, floor division and modulo, floating-point approximation, Decimal, Fraction, truthiness, short-circuiting, comparisons, identity, membership, bitwise operators, precedence, and common exceptions.
+- **Requirements:** Write a runnable Python script that demonstrates numeric literals and conversions, arithmetic including negative floor division and modulo, floating-point comparison with `math.isclose`, Boolean short-circuiting and truthiness, chained comparisons, and one formatted result.
+- **Input → Output:** A compact set of printed examples with values that illustrate Python's numeric and Boolean rules.
+- **Acceptance criteria:** The examples show that `/` produces a float, `//` floors toward negative infinity, `and`/`or` return operands, and float comparisons should use `math.isclose` when approximate equality is intended.
+- **Tests:** Run the script and compare its output with the expected results in the lesson.
 
 *End of document.*
