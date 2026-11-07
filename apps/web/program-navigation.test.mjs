@@ -32,17 +32,17 @@ test("path rows link to the program reader", async () => {
   assert.match(content.innerHTML, /href="#track\/PY"/);
   assert.match(content.innerHTML, /href="#program\/PY-01"/);
   assert.match(content.innerHTML, /Objects - Mutable and Immutable in Python/);
-  assert.match(content.innerHTML, /5 tracks · 191 programs/);
+  assert.match(content.innerHTML, /5 tracks · 204 programs/);
 });
 
 test("Python track route shows only Python and its programs", async () => {
   const { content } = await browser("#track/PY");
   assert.match(content.innerHTML, /<h1>Python<\/h1>/);
-  assert.match(content.innerHTML, /21 programs/);
+  assert.match(content.innerHTML, /34 programs/);
   assert.match(content.innerHTML, /href="#program\/PY-01"/);
   assert.match(content.innerHTML, /href="#program\/PY-02"/);
   assert.match(content.innerHTML, /href="#program\/PY-03"/);
-  for (const code of Array.from({ length: 21 }, (_, index) => `PY-${String(index + 1).padStart(2, "0")}`)) assert.match(content.innerHTML, new RegExp(`href="#program/${code}"`));
+  for (const code of Array.from({ length: 34 }, (_, index) => `PY-${String(index + 1).padStart(2, "0")}`)) assert.match(content.innerHTML, new RegExp(`href="#program/${code}"`));
   assert.match(content.innerHTML, /Objects - Mutable and Immutable in Python/);
   assert.match(content.innerHTML, /Numbers, Booleans & Operators in Python/);
   assert.match(content.innerHTML, /Strings, Indexing, Slicing & Encoding in Python/);

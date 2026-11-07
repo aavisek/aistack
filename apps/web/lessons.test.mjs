@@ -10,7 +10,7 @@ test("all authored lessons have valid metadata and required ordered sections", a
   const codes = new Map(programs.map((program) => [program.code, program]));
   assert.deepEqual(lessons.map(({ id }) => id), [
     ...Array.from({ length: 12 }, (_, index) => `FD-${String(index + 1).padStart(2, "0")}`),
-    ...Array.from({ length: 21 }, (_, index) => `PY-${String(index + 1).padStart(2, "0")}`),
+    ...Array.from({ length: 34 }, (_, index) => `PY-${String(index + 1).padStart(2, "0")}`),
     "TS-01", "TS-02"
   ]);
   for (const lesson of lessons) {

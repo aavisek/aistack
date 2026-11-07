@@ -27,7 +27,20 @@ export const cheatSheets = {
   "PY-19": { title: "Dictionary in Place of Match Case", file: "10_Dictionary_in_Place_of_Match_Case.pdf" },
   "PY-20": { title: "The Walrus Operator", file: "11_Walrus_Operator.pdf" },
   "PY-21": { title: "Loops in Python", file: "12_Loops_in_Python.pdf" },
-  "PY-03": { title: "Python Strings: Index, Slice & Encoding", file: "Python_Strings_Index_Slice_Encoding_Cheat_Sheet.pdf" }
+  "PY-03": { title: "Python Strings: Index, Slice & Encoding", file: "Python_Strings_Index_Slice_Encoding_Cheat_Sheet.pdf" },
+  "PY-22": { title: "Building Your First Class and Object", file: "01_Building_Your_First_Class_and_Object.pdf" },
+  "PY-23": { title: "Class and Object Namespace", file: "02_Class_and_Object_Namespace.pdf" },
+  "PY-24": { title: "Attribute Shadowing", file: "03_Attribute_Shadowing.pdf" },
+  "PY-25": { title: "self in Python", file: "04_self_in_Python.pdf" },
+  "PY-26": { title: "Constructors and __init__", file: "05_Constructors_and_init.pdf" },
+  "PY-27": { title: "Three Ways to Access a Base Class", file: "07_Three_Ways_to_Access_a_Base_Class.pdf" },
+  "PY-28": { title: "Method Resolution Order (MRO)", file: "08_Method_Resolution_Order_MRO.pdf" },
+  "PY-29": { title: "Static Methods", file: "09_Static_Methods.pdf" },
+  "PY-30": { title: "Class Method vs Static Method", file: "10_Class_Method_vs_Static_Method.pdf" },
+  "PY-31": { title: "Property Decorator: Getter and Setter", file: "11_Property_Decorator_Getter_and_Setter.pdf" },
+  "PY-32": { title: "Object-Oriented Programming: The 4 Pillars", file: "12_Object_Oriented_Programming_The_4_Pillars.pdf" },
+  "PY-33": { title: "Design an Object-Oriented Python Application", file: "13_Design_an_Object_Oriented_Python_Application.pdf" },
+  "PY-34": { title: "Python OOP Quick Reference", file: "Bonus_Quick_Reference.pdf" }
 };
 
 // Some PDFs reference fonts they do not embed; pdf.js needs its bundled font files to draw them.

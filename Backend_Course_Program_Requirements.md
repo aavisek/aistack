@@ -1,6 +1,6 @@
 # Backend Developer Course — Program Requirements Specification
 
-**Scope:** 191 unique programs — 12 Foundations (FD-01 to FD-12), 100 TypeScript (TS-01 to TS-100), 42 NestJS/Redis/BullMQ/AI (NS-01 to NS-42), 16 PostgreSQL (PG-01 to PG-16), and 21 Python topics (PY-01 to PY-21).
+**Scope:** 204 unique programs — 12 Foundations (FD-01 to FD-12), 100 TypeScript (TS-01 to TS-100), 42 NestJS/Redis/BullMQ/AI (NS-01 to NS-42), 16 PostgreSQL (PG-01 to PG-16), and 34 Python topics (PY-01 to PY-34).
 **Beginner note:** Start with Part 0 and follow the *Recommended Learning Order* table in it.
 **Source:** "Backend Developer Course for AI.txt". Duplicates removed: the PostgreSQL list appeared three times in the source (kept once), and the second NestJS 'Top 30' list overlapped with the first in 28 of 30 items (only 2 new programs added). The third list, a 'Top 50', overlapped in 39 of 50 items and added 11 new programs (NS-33 to NS-42 and PG-16). All overlaps are mapped in Part C.
 **How to use:** Each program has the same blocks: **Objective**, **Requirements** (what to build), **Input → Output**, **Acceptance criteria** (what "done" means), and **Tests** (minimum checks to write). Tick the checkbox when done.
@@ -40,7 +40,7 @@
 - Part B — NestJS Roadmap A: NS-01 … NS-30
 - Part C — NestJS additions (NS-31 … NS-42) and duplicate mapping tables for the 2nd and 3rd lists
 - Part D — PostgreSQL: PG-01 … PG-16
-- Part E — Python: PY-01 … PY-21
+- Part E — Python: PY-01 … PY-34
 
 ---
 
@@ -1999,5 +1999,109 @@ The Top 50 list was checked item by item. 38 of its 50 items duplicated programs
 - **Input → Output:** Small standalone scripts with hardcoded data and printed values, ending with a program that prints two lines: `27 [0, 1, 4, 9] [8, 15]` and `{'b': 1, 'a': 3, 'n': 2}`.
 - **Acceptance criteria:** `for` and `while` loops, including the loop `else` clause, repeat the right number of times and stop correctly; `range()` works with one, two, and three arguments, excludes the stop value, counts down with a negative step, and can be empty; `enumerate()`, `zip()`, `reversed()`, and `.items()` are matched to the job they do; `break`, `continue`, loop `else`, and `pass` control the flow of a loop; the accumulate, transform, filter, and count patterns work, and loops run over dictionaries, strings, and files; the list, dictionary, set, and generator comprehensions are shown with nested loops and `itertools`; the pitfalls checklist and the walrus loop test are demonstrated with their fixes; the combined loop programs and the cheat sheet's common-patterns program print the expected output
 - **Tests:** Run every script and compare its output with the lesson, including the `ValueError` for a zero step, the skipped item when removing from a list in a loop, the empty second pass over an iterator, and the final two-line common-patterns output.
+
+### PY-22 Building Your First Class and Object in Python
+- [ ] **Objective:** Define Python classes, create independent instances, and keep related state and behavior together.
+- **Key concepts:** Class definitions, instances, methods, `self`, instance attributes, object identity, and state validation.
+- **Requirements:** Write runnable examples that define a `BankAccount`, create multiple accounts, update state through methods, inspect instance state, and reject an invalid withdrawal.
+- **Input → Output:** Standalone scripts that print account summaries, independent balances, and successful or rejected operations.
+- **Acceptance criteria:** A class defines related state and behavior; two instances keep independent state; methods validate and update an instance.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-23 Class and Object Namespaces in Python
+- [ ] **Objective:** Explain how Python stores and resolves names in class and instance namespaces.
+- **Key concepts:** Class attributes, instance attributes, `__dict__`, lookup order, shadowing, and shared configuration.
+- **Requirements:** Write runnable examples that inspect both namespaces, override a class attribute on one object, and change shared class configuration deliberately.
+- **Input → Output:** Printed namespace dictionaries and values showing instance overrides and class fallback.
+- **Acceptance criteria:** Class and instance namespaces are distinct; instance lookup can override a class attribute; class-level configuration can be shared deliberately.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-24 Attribute Shadowing in Python
+- [ ] **Objective:** Predict and control how instance attributes shadow class attributes and methods.
+- **Key concepts:** Lookup precedence, instance shadowing, `del`, method replacement, and namespace inspection.
+- **Requirements:** Write runnable examples that shadow a class value, remove the shadow, replace a method on one object, and inspect the source of a value.
+- **Input → Output:** Printed values showing the instance override, class fallback, and isolated method replacement.
+- **Acceptance criteria:** An instance value can hide a class value; deleting the instance value restores fallback lookup; methods can also be shadowed on one object.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-25 Understanding self in Python
+- [ ] **Objective:** Explain how Python binds an instance method and how `self` provides access to object state.
+- **Key concepts:** Bound methods, explicit method calls, instance attributes, local variables, and missing-argument errors.
+- **Requirements:** Write runnable examples that store state through `self`, compare bound and explicit calls, distinguish local variables from attributes, and demonstrate the missing-`self` error.
+- **Input → Output:** Printed state, equivalent method results, and a handled `TypeError`.
+- **Acceptance criteria:** `self` stores and reads instance state; a bound call supplies the instance automatically; local variables and instance attributes have different lifetimes.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-26 Constructors and __init__ in Python
+- [ ] **Objective:** Use `__init__` to establish valid object state with defaults and validation.
+- **Key concepts:** Constructor arguments, default values, invariants, `ValueError`, and the `None` return contract of `__init__`.
+- **Requirements:** Write runnable examples with required and default constructor values, validate an impossible temperature, and show that `__init__` initializes an existing object.
+- **Input → Output:** Printed initialized values and a handled validation error.
+- **Acceptance criteria:** Required state is created in `__init__`; defaults support common construction; invalid input is rejected before use.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-27 Three Ways to Access a Base Class in Python
+- [ ] **Objective:** Choose between ordinary inherited lookup, a direct base-class call, and `super()`.
+- **Key concepts:** Inherited methods, explicit instance arguments, `super()`, and cooperative inheritance.
+- **Requirements:** Write runnable examples that call inherited behavior normally, call a named base implementation directly, and extend that behavior with `super()`.
+- **Input → Output:** Matching labels that demonstrate each access style and its result.
+- **Acceptance criteria:** Inherited methods can be called through an instance; a base implementation can be named explicitly; `super()` supports cooperative extension.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-28 Method Resolution Order and MRO in Python
+- [ ] **Objective:** Inspect and use Python's method resolution order in single and multiple inheritance.
+- **Key concepts:** `__mro__`, `mro()`, diamond inheritance, first-match lookup, C3 linearization, mixins, and cooperative `super()`.
+- **Requirements:** Write runnable examples that print a hierarchy's MRO, show which duplicate method wins, and make a diamond hierarchy cooperate through `super()`.
+- **Input → Output:** Printed class order and a combined result from every cooperative class.
+- **Acceptance criteria:** The MRO can be inspected; the first matching method wins normal lookup; cooperative `super()` calls traverse the hierarchy.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-29 Static Methods in Python
+- [ ] **Objective:** Use `@staticmethod` for class-related behavior that needs no implicit object.
+- **Key concepts:** Static method binding, stateless validation, explicit arguments, and module-level alternatives.
+- **Requirements:** Write runnable examples that call a static validator through both the class and an instance, use it during construction, and compare it with a plain helper function.
+- **Input → Output:** Boolean validation results and a handled invalid construction.
+- **Acceptance criteria:** A static method can be called through the class; it receives no implicit instance; it is appropriate for class-related stateless behavior.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-30 Class Methods versus Static Methods in Python
+- [ ] **Objective:** Distinguish instance, class, and static methods and choose the correct binding.
+- **Key concepts:** `self`, `cls`, `@classmethod`, `@staticmethod`, alternate constructors, and subclass preservation.
+- **Requirements:** Write runnable examples with a class-method factory, a static normalization helper, a subclass that inherits the factory, and a comparison of all three method forms.
+- **Input → Output:** Printed factory results, normalized data, and the preserved subclass type.
+- **Acceptance criteria:** A class method receives the calling class; a static method receives no implicit object; a factory preserves subclass construction.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-31 The property Decorator: Getters and Setters
+- [ ] **Objective:** Use properties to provide attribute-style access with validation, computation, and read-only behavior.
+- **Key concepts:** `@property`, getters, setters, backing attributes, descriptors, and read-only properties.
+- **Requirements:** Write runnable examples with a computed getter, a validating setter, a read-only label, and a backing attribute that avoids recursion.
+- **Input → Output:** Printed computed values, updated values, and a handled validation or attribute error.
+- **Acceptance criteria:** A getter supports attribute-style reads; a setter validates attribute-style writes; a property can be read-only and computed.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-32 The Four Pillars of Object-Oriented Python
+- [ ] **Objective:** Apply encapsulation, abstraction, inheritance, and polymorphism to a small Python design.
+- **Key concepts:** Properties, abstract base classes, abstract methods, concrete subclasses, shared contracts, polymorphic calls, and composition.
+- **Requirements:** Write a notification example that validates encapsulated state, defines an abstract send contract, implements email and SMS subclasses, and notifies them through one interface.
+- **Input → Output:** Printed messages from multiple notification implementations using one caller.
+- **Acceptance criteria:** State validation is encapsulated; an abstract contract defines required behavior; subclasses inherit and specialize; a caller uses polymorphism through one interface.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-33 Design an Object-Oriented Python Application
+- [ ] **Objective:** Decompose an application into focused domain entities, lookup components, and use-case services.
+- **Key concepts:** Responsibility boundaries, composition, domain state, service coordination, dependency boundaries, and test doubles.
+- **Requirements:** Build a library checkout application with books, members, a catalog, and a checkout service; handle missing and unavailable books; and replace the catalog with a compatible fake.
+- **Input → Output:** Checkout messages for success, unavailable inventory, missing inventory, and fake-catalog lookup.
+- **Acceptance criteria:** Domain entities own their state; lookup is isolated behind a catalog; a service coordinates and validates a use case; a fake implementation can replace a dependency.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-34 Python OOP Quick Reference
+- [ ] **Objective:** Select the simplest Python OOP feature for state, behavior, construction, validation, and reuse.
+- **Key concepts:** Classes, instances, `__init__`, instance methods, class methods, static methods, properties, inheritance, `super()`, and MRO.
+- **Requirements:** Write a single reference program that demonstrates construction, all three method types, a validating property, subclass extension, and MRO inspection.
+- **Input → Output:** Compact printed examples for each OOP feature.
+- **Acceptance criteria:** The reference includes classes, instances, and methods; it demonstrates class and static methods; it demonstrates a validating property; it demonstrates inheritance and MRO inspection.
+- **Tests:** Run every script and compare its output with the lesson.
 
 *End of document.*
