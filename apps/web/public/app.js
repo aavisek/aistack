@@ -366,8 +366,8 @@ async function openCheatSheet(id) {
     const nextControl = next
       ? `<a class="button primary" href="#cheatsheet/${encodeURIComponent(next.id)}" rel="next" aria-label="Next cheat sheet: ${escapeHtml(next.title)}">Next →</a>`
       : `<span class="button primary is-disabled" aria-disabled="true">Next →</span>`;
-    const navigationMarkup = `<nav class="cheat-sheet-navigation" aria-label="Cheat sheet navigation">${previousControl}<span class="cheat-sheet-position">${escapeHtml(id)} of 46 topics</span>${nextControl}</nav>`;
-    content.innerHTML = `<div class="view-title"><div class="cheat-sheet-links"><a class="link" href="#cheatsheets">Back to Cheat Sheets</a><a class="link" href="#program/${encodeURIComponent(id)}">Back to ${escapeHtml(id)}</a></div><span class="tag">${escapeHtml(id)} · CHEAT SHEET</span><h1>${escapeHtml(data.title)}</h1><p>${data.pageCount} ${data.pageCount === 1 ? "page" : "pages"} · Scroll to read · View only</p></div>${navigationMarkup}<section class="cheat-sheet-viewer" aria-label="${escapeHtml(data.title)} cheat sheet">${pageMarkup}</section>${navigationMarkup}`;
+    const navigationMarkup = `<nav class="cheat-sheet-navigation" aria-label="Cheat sheet navigation">${previousControl}<span class="cheat-sheet-position">CS-${String(data.number).padStart(2, "0")} · ${navigation?.position ?? "?"} of ${navigation?.total ?? "?"} topics</span>${nextControl}</nav>`;
+    content.innerHTML = `<div class="view-title"><div class="cheat-sheet-links"><a class="link" href="#cheatsheets">Back to Cheat Sheets</a><a class="link" href="#program/${encodeURIComponent(data.id)}">Back to ${escapeHtml(data.id)}</a></div><span class="tag">CS-${String(data.number).padStart(2, "0")} · CHEAT SHEET</span><h1>${escapeHtml(data.title)}</h1><p>${data.pageCount} ${data.pageCount === 1 ? "page" : "pages"} · Scroll to read · View only</p></div>${navigationMarkup}<section class="cheat-sheet-viewer" aria-label="${escapeHtml(data.title)} cheat sheet">${pageMarkup}</section>${navigationMarkup}`;
     content.querySelector(".cheat-sheet-viewer").addEventListener("contextmenu", (event) => event.preventDefault());
   } catch (error) {
     if (location.hash !== route) return;
@@ -383,11 +383,9 @@ async function openCheatSheets() {
     if (!response.ok) throw new Error("Could not load the cheat sheets. Please try again.");
     const { data, groups } = await response.json();
     if (location.hash !== route) return;
-    let topicIndex = 0;
     const groupMarkup = groups.map((group) => {
-      const rows = group.topics.map((sheet) => {
-        topicIndex += 1;
-        return `<a class="program-row program-link" href="#cheatsheet/${encodeURIComponent(sheet.id)}"><span class="program-index">${String(topicIndex).padStart(2, "0")}</span><div><h3>${escapeHtml(sheet.id)} · ${escapeHtml(sheet.title)}</h3><p>Python · Topic reference</p></div><div class="row-status"><span>Open</span><span aria-hidden="true">→</span></div></a>`;
+      const rows = group.topics.map((sheet, topicIndex) => {
+        return `<a class="program-row program-link" href="#cheatsheet/${encodeURIComponent(sheet.id)}"><span class="program-index">${String(topicIndex + 1).padStart(2, "0")}</span><div><h3><span class="cheat-sheet-number">CS-${String(sheet.number).padStart(2, "0")}</span> · ${escapeHtml(sheet.title)}</h3><p>Python · Topic reference</p></div><div class="row-status"><span>Open</span><span aria-hidden="true">→</span></div></a>`;
       }).join("");
       const status = group.priority ?? (group.required ? "MANDATORY" : "CORE");
       const placeholder = group.topics.length === 0 ? `<div class="cheat-sheet-placeholder"><strong>Lessons pending</strong><span>Topic cheat sheets will be added here.</span></div>` : "";

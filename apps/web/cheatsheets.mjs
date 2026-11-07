@@ -142,9 +142,19 @@ export function cheatSheetFor(lessonId) {
   return Object.hasOwn(cheatSheets, lessonId) ? cheatSheets[lessonId] : undefined;
 }
 
+export function cheatSheetId(value) {
+  if (Object.hasOwn(cheatSheets, value)) return value;
+  if (/^\d+$/.test(value)) {
+    const id = `PY-${value.padStart(2, "0")}`;
+    if (Object.hasOwn(cheatSheets, id)) return id;
+  }
+  return undefined;
+}
+
 export function listCheatSheets() {
   return cheatSheetGroups.flatMap((group) => group.topics.map((id) => ({
     id,
+    number: Number(id.slice(3)),
     title: cheatSheets[id].title,
     groupId: group.id,
     groupTitle: group.title,
@@ -163,12 +173,15 @@ export function listCheatSheetGroups() {
 }
 
 export function cheatSheetNavigation(lessonId) {
+  lessonId = cheatSheetId(lessonId);
   const sheets = listCheatSheets();
   const index = sheets.findIndex(({ id }) => id === lessonId);
   if (index < 0) return undefined;
   const previous = sheets[index - 1];
   const next = sheets[index + 1];
   return {
+    position: index + 1,
+    total: sheets.length,
     previous: previous ? { id: previous.id, title: previous.title } : null,
     next: next ? { id: next.id, title: next.title } : null
   };
@@ -189,13 +202,15 @@ async function openDocument(lessonId) {
 }
 
 export async function cheatSheetInfo(lessonId) {
+  lessonId = cheatSheetId(lessonId);
   const sheet = cheatSheetFor(lessonId);
   if (!sheet) return undefined;
   const document = await openDocument(lessonId);
-  return { id: lessonId, title: sheet.title, pageCount: document.numPages };
+  return { id: lessonId, number: Number(lessonId.slice(3)), title: sheet.title, pageCount: document.numPages };
 }
 
 export async function renderCheatSheetPage(lessonId, pageNumber) {
+  lessonId = cheatSheetId(lessonId);
   if (!cheatSheetFor(lessonId)) return undefined;
   const document = await openDocument(lessonId);
   if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > document.numPages) return undefined;

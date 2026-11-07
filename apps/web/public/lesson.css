@@ -136,6 +136,7 @@
 .cheat-sheet-navigation .button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 8px; text-decoration: none; }
 .cheat-sheet-navigation .is-disabled { cursor: not-allowed; opacity: .45; pointer-events: none; }
 .cheat-sheet-position { color: var(--muted); font-size: 12px; text-align: center; }
+.cheat-sheet-number { color: var(--accent); font-variant-numeric: tabular-nums; }
 .cheat-sheet-tree { display: grid; gap: 18px; }
 .cheat-sheet-group { padding: 18px; }
 .cheat-sheet-group .section-head { margin: 0 0 12px; }

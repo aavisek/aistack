@@ -4,7 +4,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadPrograms } from "./course.mjs";
 import { loadLessons } from "./lessons.mjs";
-import { cheatSheetFor, cheatSheetInfo, cheatSheetNavigation, listCheatSheetGroups, listCheatSheets, renderCheatSheetPage } from "./cheatsheets.mjs";
+import { cheatSheetFor, cheatSheetId, cheatSheetInfo, cheatSheetNavigation, listCheatSheetGroups, listCheatSheets, renderCheatSheetPage } from "./cheatsheets.mjs";
 import { jdConfig } from "./jd-config.mjs";
 import { JdStore } from "./jd-store.mjs";
 import { createJdApi } from "./jd-api.mjs";
@@ -52,9 +52,10 @@ const server = createServer(async (request, response) => {
     try {
       const [id, kind, pageFile] = url.pathname.slice("/api/cheatsheets/".length).split("/").map(decodeURIComponent);
       if (!kind) {
-        const info = await cheatSheetInfo(id);
+        const resolvedId = cheatSheetId(id);
+        const info = await cheatSheetInfo(resolvedId);
         response.writeHead(info ? 200 : 404, { "content-type": "application/json", "cache-control": "no-cache" });
-        response.end(JSON.stringify(info ? { data: info, navigation: cheatSheetNavigation(id) } : { error: { message: "Cheat sheet not found." } }));
+        response.end(JSON.stringify(info ? { data: info, navigation: cheatSheetNavigation(resolvedId) } : { error: { message: "Cheat sheet not found." } }));
         return;
       }
       const pageNumber = kind === "pages" && /^\d+\.png$/.test(pageFile ?? "") ? Number.parseInt(pageFile, 10) : Number.NaN;
