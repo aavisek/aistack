@@ -3,7 +3,7 @@ const tracks = [
   { code: "TS", name: "TypeScript", count: 100, progress: 18, color: "#51d4cf", description: "From strict typing to production Node patterns." },
   { code: "NS", name: "NestJS & Redis", count: 42, progress: 6, color: "#ff7487", description: "Design APIs, queues, caches and workers." },
   { code: "PG", name: "PostgreSQL", count: 16, progress: 0, color: "#8b7cff", description: "Model, query and scale reliable data systems." },
-  { code: "PY", name: "Python", count: 34, progress: 0, color: "#f0c75e", description: "Build a strong foundation in Python and its object model." }
+  { code: "PY", name: "Python", count: 59, progress: 0, color: "#f0c75e", description: "Build a strong foundation in Python and its object model." }
 ];
 const programs = [
   ["FD-01", "Git & npm Essentials", "Foundations", "completed"],
@@ -56,7 +56,32 @@ const programs = [
   ["PY-31", "The property Decorator: Getters and Setters", "Python", "upcoming"],
   ["PY-32", "The Four Pillars of Object-Oriented Python", "Python", "upcoming"],
   ["PY-33", "Design an Object-Oriented Python Application", "Python", "upcoming"],
-  ["PY-34", "Python OOP Quick Reference", "Python", "upcoming"]
+  ["PY-34", "Python OOP Quick Reference", "Python", "upcoming"],
+  ["PY-35", "Functions: Reducing Duplication and Splitting Complex Tasks", "Python", "upcoming"],
+  ["PY-36", "Functions: Three More Features", "Python", "upcoming"],
+  ["PY-37", "Scope and Namespace in Functions", "Python", "upcoming"],
+  ["PY-38", "Nonlocal versus Global Scopes", "Python", "upcoming"],
+  ["PY-39", "Handling Arguments in Functions", "Python", "upcoming"],
+  ["PY-40", "Handling Multiple Returns in Functions", "Python", "upcoming"],
+  ["PY-41", "Lambdas, Pure versus Impure Functions", "Python", "upcoming"],
+  ["PY-42", "Function Types in Python", "Python", "upcoming"],
+  ["PY-43", "Documenting Functions and Built-in Functions", "Python", "upcoming"],
+  ["PY-44", "Functions in Python", "Python", "upcoming"],
+  ["PY-45", "Python Imports, Modules and __init__.py", "Python", "upcoming"],
+  ["PY-46", "Python Imports", "Python", "upcoming"],
+  ["PY-47", "List Comprehensions", "Python", "upcoming"],
+  ["PY-48", "Set Comprehensions", "Python", "upcoming"],
+  ["PY-49", "Dictionary Comprehensions", "Python", "upcoming"],
+  ["PY-50", "Generator Comprehensions for Memory Optimization", "Python", "upcoming"],
+  ["PY-51", "Comprehensions in Python", "Python", "upcoming"],
+  ["PY-52", "Generators with yield and next", "Python", "upcoming"],
+  ["PY-53", "Infinite Generators", "Python", "upcoming"],
+  ["PY-54", "Send Values to Generators", "Python", "upcoming"],
+  ["PY-55", "yield from and Closing Generators", "Python", "upcoming"],
+  ["PY-56", "Decorators in Python", "Python", "upcoming"],
+  ["PY-57", "Build a Logger with a Decorator", "Python", "upcoming"],
+  ["PY-58", "Build an Authorization Decorator", "Python", "upcoming"],
+  ["PY-59", "Generators and Decorators in Python", "Python", "upcoming"]
 ];
 const state = JSON.parse(localStorage.getItem("ai-mastery-state") ?? '{"saved":[],"completed":3}');
 const content = document.querySelector("#content");
@@ -69,7 +94,7 @@ function shell(view) {
 }
 function today() {
   return `<div class="hero"><div><span class="eyebrow">Sunday, October 18</span><h1>Make progress today.</h1><p>A small, focused session compounds into serious engineering skill.</p></div><span class="date">Your learning path · Week 04</span></div>
-  <div class="stats-grid"><div class="stat"><span class="stat-label">Current streak</span><div class="stat-value">7 days</div><div class="stat-trend">↑ 2 days this week</div></div><div class="stat"><span class="stat-label">Programs understood</span><div class="stat-value">${state.completed}<small style="font-size:12px;color:var(--muted)"> / 173</small></div><div class="stat-trend">↑ 1 this week</div></div><div class="stat"><span class="stat-label">Study time</span><div class="stat-value">2h 40m</div><div class="stat-trend muted">This week</div></div><div class="stat"><span class="stat-label">Daily goal</span><div class="stat-value">1 / 2</div><div class="stat-trend muted">programs</div></div></div>
+  <div class="stats-grid"><div class="stat"><span class="stat-label">Current streak</span><div class="stat-value">7 days</div><div class="stat-trend">↑ 2 days this week</div></div><div class="stat"><span class="stat-label">Programs understood</span><div class="stat-value">${state.completed}<small style="font-size:12px;color:var(--muted)"> / 186</small></div><div class="stat-trend">↑ 1 this week</div></div><div class="stat"><span class="stat-label">Study time</span><div class="stat-value">2h 40m</div><div class="stat-trend muted">This week</div></div><div class="stat"><span class="stat-label">Daily goal</span><div class="stat-value">1 / 2</div><div class="stat-trend muted">programs</div></div></div>
   <div class="section-head"><h2>Continue learning</h2><a class="link" href="#path">View path →</a></div>
   <section class="panel focus-card"><div class="focus-copy"><span class="tag">TS-01 · TYPESCRIPT</span><h2>Hello World & Strict Typing</h2><p>Start with Hello World, your name, adding two numbers, and true/false values. Learn one small TypeScript program at a time.</p><div class="focus-actions"><button class="primary" data-action="study">Continue · 4 min</button><button class="secondary" data-action="save">♡ Save</button></div></div><div class="focus-visual"><div class="ring"><strong>62%</strong><small>complete</small></div></div></section>
   <div class="section-head"><h2>Up next</h2><span class="link">2 programs today</span></div><div class="program-list">${programs.filter((program) => program[2] === "TypeScript").slice(0,3).map((p,i)=>row(p,i)).join("")}</div>`;
@@ -81,7 +106,7 @@ function trackView(code) {
   const trackPrograms = programs.filter((program) => program[2] === track.name);
   return `<div class="view-title"><a class="link" href="#path">Back to learning path</a><span class="eyebrow">${escapeHtml(track.code)} track</span><h1>${escapeHtml(track.name)}</h1><p>${escapeHtml(track.description)}</p></div><section class="panel track-card track-detail"><span class="tag" style="background:${track.color}22;color:${track.color}">${escapeHtml(track.code)}</span><h2>${escapeHtml(track.name)}</h2><p>${escapeHtml(track.description)}</p><div class="track-meta"><span>${trackPrograms.length} programs</span><span>${track.progress}% complete</span></div><div class="bar"><i style="width:${track.progress}%;background:${track.color}"></i></div></section><div class="section-head" style="margin-top:34px"><h2>${escapeHtml(track.name)} programs</h2></div><div class="program-list">${trackPrograms.map((program, index) => row(program, index)).join("")}</div>`;
 }
-function path() { return `<div class="view-title"><span class="eyebrow">The roadmap</span><h1>Your learning path</h1><p>204 programs, sequenced from first principles to production systems.</p></div><div class="path-toolbar"><div class="section-head" style="margin:0"><h2>Tracks</h2><span class="link">5 tracks · 204 programs</span></div><input class="search" id="search" placeholder="Search programs..." /></div><div class="track-grid">${tracks.map(t=>`<${t.code === "PY" ? "a href=\"#track/PY\"" : "article"} class="panel track-card${t.code === "PY" ? " track-card-link" : ""}"><span class="tag" style="background:${t.color}22;color:${t.color}">${t.code}</span><h2>${t.name}</h2><p>${t.description}</p><div class="track-meta"><span>${t.count} programs</span><span>${t.progress}% complete</span></div><div class="bar"><i style="width:${t.progress}%;background:${t.color}"></i></div></${t.code === "PY" ? "a" : "article"}>`).join("")}</div><div class="section-head" style="margin-top:34px"><h2>Programs in order</h2></div><div class="program-list" id="programs">${programs.map((p,i)=>row(p,i)).join("")}</div>`; }
+function path() { return `<div class="view-title"><span class="eyebrow">The roadmap</span><h1>Your learning path</h1><p>229 programs, sequenced from first principles to production systems.</p></div><div class="path-toolbar"><div class="section-head" style="margin:0"><h2>Tracks</h2><span class="link">5 tracks · 229 programs</span></div><input class="search" id="search" placeholder="Search programs..." /></div><div class="track-grid">${tracks.map(t=>`<${t.code === "PY" ? "a href=\"#track/PY\"" : "article"} class="panel track-card${t.code === "PY" ? " track-card-link" : ""}"><span class="tag" style="background:${t.color}22;color:${t.color}">${t.code}</span><h2>${t.name}</h2><p>${t.description}</p><div class="track-meta"><span>${t.count} programs</span><span>${t.progress}% complete</span></div><div class="bar"><i style="width:${t.progress}%;background:${t.color}"></i></div></${t.code === "PY" ? "a" : "article"}>`).join("")}</div><div class="section-head" style="margin-top:34px"><h2>Programs in order</h2></div><div class="program-list" id="programs">${programs.map((p,i)=>row(p,i)).join("")}</div>`; }
 function review() { return `<div class="view-title"><span class="eyebrow">Spaced repetition</span><h1>Review queue</h1><p>Short sessions that make what you learn stick.</p></div><div class="review-grid"><section class="panel review-card"><span class="tag">REVIEW 01 · TS-01</span><h2>What does <code>strict: true</code> enable?</h2><p>Choose the best answer, then compare the explanation. There are 3 reviews due today.</p><div class="quiz-options"><button>It enables all strict type-checking options.</button><button>It only checks unused variables.</button><button>It disables implicit type inference.</button></div></section><aside class="panel side-summary"><h3>Today’s review</h3><div class="summary-row"><span>Due now</span><strong>3 cards</strong></div><div class="summary-row"><span>Estimated time</span><strong>8 min</strong></div><div class="summary-row"><span>Retention</span><strong style="color:var(--green)">92%</strong></div></aside></div>`; }
 function saved() { return `<div class="view-title"><span class="eyebrow">Your library</span><h1>Saved for later</h1><p>Bookmarks and notes stay local for now and can move to the API in Phase 4.</p></div><section class="panel empty"><div style="font-size:32px;color:var(--accent)">♡</div><h2>Your saved cards will appear here</h2><p>Save a useful concept while studying to build your personal reference library.</p><a class="link" href="#today">Return to today →</a></section>`; }
 function me() { return `<div class="view-title"><span class="eyebrow">Your workspace</span><h1>Alex Morgan</h1><p>Keep showing up. The system is working.</p></div><div class="stats-grid"><div class="stat"><span class="stat-label">All-time study</span><div class="stat-value">18h 24m</div></div><div class="stat"><span class="stat-label">Longest streak</span><div class="stat-value">14 days</div></div><div class="stat"><span class="stat-label">Cards viewed</span><div class="stat-value">246</div></div><div class="stat"><span class="stat-label">Mastery</span><div class="stat-value">12%</div></div></div><section class="panel" style="padding:24px"><div class="section-head"><h2>Settings</h2></div><div class="summary-row"><span>Theme</span><strong>Dark · Auto</strong></div><div class="summary-row"><span>Daily goal</span><strong>2 programs</strong></div><div class="summary-row"><span>Storage</span><strong style="color:var(--green)">Local only</strong></div></section>`; }
@@ -325,19 +350,53 @@ async function openProgram(code) {
 }
 async function openCheatSheet(id) {
   const route = location.hash;
-  shell("path");
+  shell("cheatsheets");
   content.innerHTML = '<section class="panel empty" role="status">Loading cheat sheet...</section>';
   try {
     const response = await fetch(`/api/cheatsheets/${encodeURIComponent(id)}`);
     if (!response.ok) throw new Error(response.status === 404 ? "Cheat sheet not found." : "Could not load the cheat sheet. Please try again.");
-    const { data } = await response.json();
+    const { data, navigation } = await response.json();
     if (location.hash !== route) return;
     const pageMarkup = Array.from({ length: data.pageCount }, (_, index) => `<figure class="cheat-sheet-page"><img src="/api/cheatsheets/${encodeURIComponent(id)}/pages/${index + 1}.png" alt="${escapeHtml(data.title)}, page ${index + 1} of ${data.pageCount}" loading="${index < 2 ? "eager" : "lazy"}" draggable="false"><figcaption>Page ${index + 1} of ${data.pageCount}</figcaption></figure>`).join("");
-    content.innerHTML = `<div class="view-title"><a class="link" href="#program/${encodeURIComponent(id)}">Back to ${escapeHtml(id)}</a><span class="tag">${escapeHtml(id)} · CHEAT SHEET</span><h1>${escapeHtml(data.title)}</h1><p>${data.pageCount} ${data.pageCount === 1 ? "page" : "pages"} · Scroll to read · View only</p></div><section class="cheat-sheet-viewer" aria-label="${escapeHtml(data.title)} cheat sheet">${pageMarkup}</section>`;
+    const previous = navigation?.previous;
+    const next = navigation?.next;
+    const previousControl = previous
+      ? `<a class="button secondary" href="#cheatsheet/${encodeURIComponent(previous.id)}" rel="prev" aria-label="Previous cheat sheet: ${escapeHtml(previous.title)}">← Previous</a>`
+      : `<span class="button secondary is-disabled" aria-disabled="true">← Previous</span>`;
+    const nextControl = next
+      ? `<a class="button primary" href="#cheatsheet/${encodeURIComponent(next.id)}" rel="next" aria-label="Next cheat sheet: ${escapeHtml(next.title)}">Next →</a>`
+      : `<span class="button primary is-disabled" aria-disabled="true">Next →</span>`;
+    const navigationMarkup = `<nav class="cheat-sheet-navigation" aria-label="Cheat sheet navigation">${previousControl}<span class="cheat-sheet-position">${escapeHtml(id)} of 46 topics</span>${nextControl}</nav>`;
+    content.innerHTML = `<div class="view-title"><div class="cheat-sheet-links"><a class="link" href="#cheatsheets">Back to Cheat Sheets</a><a class="link" href="#program/${encodeURIComponent(id)}">Back to ${escapeHtml(id)}</a></div><span class="tag">${escapeHtml(id)} · CHEAT SHEET</span><h1>${escapeHtml(data.title)}</h1><p>${data.pageCount} ${data.pageCount === 1 ? "page" : "pages"} · Scroll to read · View only</p></div>${navigationMarkup}<section class="cheat-sheet-viewer" aria-label="${escapeHtml(data.title)} cheat sheet">${pageMarkup}</section>${navigationMarkup}`;
     content.querySelector(".cheat-sheet-viewer").addEventListener("contextmenu", (event) => event.preventDefault());
   } catch (error) {
     if (location.hash !== route) return;
     content.innerHTML = `<section class="panel empty" role="alert"><h2>Unable to open cheat sheet</h2><p>${escapeHtml(error instanceof Error ? error.message : "An unexpected error occurred.")}</p><a class="link" href="#path">Back to learning path</a></section>`;
+  }
+}
+async function openCheatSheets() {
+  const route = location.hash;
+  shell("cheatsheets");
+  content.innerHTML = '<section class="panel empty" role="status">Loading cheat sheets...</section>';
+  try {
+    const response = await fetch("/api/cheatsheets");
+    if (!response.ok) throw new Error("Could not load the cheat sheets. Please try again.");
+    const { data, groups } = await response.json();
+    if (location.hash !== route) return;
+    let topicIndex = 0;
+    const groupMarkup = groups.map((group) => {
+      const rows = group.topics.map((sheet) => {
+        topicIndex += 1;
+        return `<a class="program-row program-link" href="#cheatsheet/${encodeURIComponent(sheet.id)}"><span class="program-index">${String(topicIndex).padStart(2, "0")}</span><div><h3>${escapeHtml(sheet.id)} · ${escapeHtml(sheet.title)}</h3><p>Python · Topic reference</p></div><div class="row-status"><span>Open</span><span aria-hidden="true">→</span></div></a>`;
+      }).join("");
+      const status = group.priority ?? (group.required ? "MANDATORY" : "CORE");
+      const placeholder = group.topics.length === 0 ? `<div class="cheat-sheet-placeholder"><strong>Lessons pending</strong><span>Topic cheat sheets will be added here.</span></div>` : "";
+      return `<section class="cheat-sheet-group panel"><div class="section-head"><h2>${escapeHtml(group.title)}</h2><span class="tag">${escapeHtml(status)}</span></div>${placeholder}<div class="program-list" aria-label="${escapeHtml(group.title)} cheat sheets">${rows}</div></section>`;
+    }).join("");
+    content.innerHTML = `<div class="view-title"><span class="eyebrow">Reference library</span><h1>Cheat Sheets</h1><p>Topic-wise references organized by concept. They remain available at the end of each tutorial too.</p></div><div class="section-head"><h2>${data.length} topics</h2></div><div class="cheat-sheet-tree">${groupMarkup}</div>`;
+  } catch (error) {
+    if (location.hash !== route) return;
+    content.innerHTML = `<section class="panel empty" role="alert"><h2>Unable to load cheat sheets</h2><p>${escapeHtml(error instanceof Error ? error.message : "An unexpected error occurred.")}</p><a class="link" href="#path">Back to learning path</a></section>`;
   }
 }
 function applyOsChoice(group, os) {
@@ -346,7 +405,7 @@ function applyOsChoice(group, os) {
   group.querySelectorAll(".os-tab").forEach((button) => button.classList.toggle("active", button.dataset.os === selected));
   group.querySelectorAll(".os-pane").forEach((pane) => { pane.hidden = pane.dataset.os !== selected; pane.classList.toggle("active", pane.dataset.os === selected); });
 }
-function render() { const view = location.hash.slice(1) || "today"; content.onclick = null; content.onsubmit = null; content.onchange = null; if (view.startsWith("program/")) { openProgram(view.slice("program/".length)); return; } if (view.startsWith("cheatsheet/")) { openCheatSheet(decodeURIComponent(view.slice("cheatsheet/".length))); return; } if (view.startsWith("track/")) { shell("path"); const code = view.slice("track/".length); const track = tracks.find((item) => item.code === code); crumb.textContent = track?.name ?? "Learning path"; content.innerHTML = trackView(code); return; } shell(view.startsWith("jd/") ? "jd" : view); if (view === "jd" || view.startsWith("jd/")) { crumb.textContent = "JD Intelligence"; window.JdView.open(content); return; } content.innerHTML = ({today, path, review, saved, me}[view] ?? today)(); if(view==="path") document.querySelector("#search").addEventListener("input", filterPrograms); }
+function render() { const view = location.hash.slice(1) || "today"; content.onclick = null; content.onsubmit = null; content.onchange = null; if (view.startsWith("program/")) { openProgram(view.slice("program/".length)); return; } if (view.startsWith("cheatsheet/")) { openCheatSheet(decodeURIComponent(view.slice("cheatsheet/".length))); return; } if (view === "cheatsheets") { openCheatSheets(); return; } if (view.startsWith("track/")) { shell("path"); const code = view.slice("track/".length); const track = tracks.find((item) => item.code === code); crumb.textContent = track?.name ?? "Learning path"; content.innerHTML = trackView(code); return; } shell(view.startsWith("jd/") ? "jd" : view); if (view === "jd" || view.startsWith("jd/")) { crumb.textContent = "JD Intelligence"; window.JdView.open(content); return; } content.innerHTML = ({today, path, review, saved, me}[view] ?? today)(); if(view==="path") document.querySelector("#search").addEventListener("input", filterPrograms); }
 function filterPrograms(event) { const query = event.target.value.toLowerCase(); document.querySelector("#programs").innerHTML = programs.filter(p => p.join(" ").toLowerCase().includes(query)).map((p,i)=>row(p,i)).join("") || `<section class="panel empty"><h2>No matching programs</h2><p>Try a track code or keyword.</p></section>`; }
 function goToCard(offset) {
   const stack = content.querySelector(".lesson-card-stack");

@@ -131,4 +131,16 @@
 .cheat-sheet-page { margin: 0; }
 .cheat-sheet-page img { display: block; width: 100%; height: auto; background: #fff; border-radius: 8px; pointer-events: none; }
 .cheat-sheet-page figcaption { margin-top: 6px; text-align: center; font-size: 12px; opacity: .65; }
+.cheat-sheet-links { display: flex; flex-wrap: wrap; gap: 14px; }
+.cheat-sheet-navigation { display: flex; justify-content: space-between; align-items: center; gap: 12px; max-width: 900px; margin: 18px auto; }
+.cheat-sheet-navigation .button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 8px; text-decoration: none; }
+.cheat-sheet-navigation .is-disabled { cursor: not-allowed; opacity: .45; pointer-events: none; }
+.cheat-sheet-position { color: var(--muted); font-size: 12px; text-align: center; }
+.cheat-sheet-tree { display: grid; gap: 18px; }
+.cheat-sheet-group { padding: 18px; }
+.cheat-sheet-group .section-head { margin: 0 0 12px; }
+.cheat-sheet-group .program-list { margin: 0; }
+.cheat-sheet-group .program-row { background: var(--panel-2); }
+.cheat-sheet-placeholder { display: grid; gap: 4px; padding: 14px 16px; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); }
+.cheat-sheet-placeholder strong { color: var(--text); }
 @media print { .cheat-sheet-viewer { display: none; } }

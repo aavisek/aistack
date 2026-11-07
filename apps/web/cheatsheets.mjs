@@ -41,7 +41,96 @@ export const cheatSheets = {
   "PY-32": { title: "Object-Oriented Programming: The 4 Pillars", file: "12_Object_Oriented_Programming_The_4_Pillars.pdf" },
   "PY-33": { title: "Design an Object-Oriented Python Application", file: "13_Design_an_Object_Oriented_Python_Application.pdf" },
   "PY-34": { title: "Python OOP Quick Reference", file: "Bonus_Quick_Reference.pdf" }
+  ,"PY-35": { title: "Functions: Reducing Duplication and Splitting Complex Tasks", file: "01 - Functions - Reducing Duplication and Splitting Complex Tasks.pdf" }
+  ,"PY-36": { title: "Functions: Three More Features", file: "02 - Functions - Three More Features.pdf" }
+  ,"PY-37": { title: "Scope and Namespace in Functions", file: "03 - Scope and Namespace in Functions.pdf" }
+  ,"PY-38": { title: "Nonlocal versus Global Scopes", file: "04 - Nonlocal vs Global Scopes.pdf" }
+  ,"PY-39": { title: "Handling Arguments in Functions", file: "05 - Handling Arguments in Functions.pdf" }
+  ,"PY-40": { title: "Handling Multiple Returns in Functions", file: "06 - Handling Multiple Returns.pdf" }
+  ,"PY-41": { title: "Lambdas, Pure versus Impure Functions", file: "07 - Lambdas, Pure vs Impure Functions.pdf" }
+  ,"PY-42": { title: "Function Types in Python", file: "08 - Function Types.pdf" }
+  ,"PY-43": { title: "Documenting Functions and Built-in Functions", file: "09 - Documenting Functions and Built-in Functions.pdf" }
+  ,"PY-44": { title: "Functions in Python", file: "10 - Functions in Python.pdf" }
+  ,"PY-45": { title: "Python Imports, Modules and __init__.py", file: "11 - Python Imports, Modules and __init__.py.pdf" }
+  ,"PY-46": { title: "Python Imports", file: "12 - Python Imports.pdf" }
+  ,"PY-47": { title: "List Comprehensions", file: "14 - List Comprehensions.pdf" }
+  ,"PY-48": { title: "Set Comprehensions", file: "15 - Set Comprehensions.pdf" }
+  ,"PY-49": { title: "Dictionary Comprehensions", file: "16 - Dictionary Comprehensions.pdf" }
+  ,"PY-50": { title: "Generator Comprehensions for Memory Optimization", file: "17 - Generator Comprehensions for Memory Optimization.pdf" }
+  ,"PY-51": { title: "Comprehensions in Python", file: "18 - Comprehensions in Python.pdf" }
+  ,"PY-52": { title: "Generators with yield and next", file: "19 - Generators with yield and next.pdf" }
+  ,"PY-53": { title: "Infinite Generators", file: "20 - Infinite Generators.pdf" }
+  ,"PY-54": { title: "Send Values to Generators", file: "21 - Send Values to Generators.pdf" }
+  ,"PY-55": { title: "yield from and Closing Generators", file: "22 - yield from and Closing Generators.pdf" }
+  ,"PY-56": { title: "Decorators in Python", file: "23 - Decorators in Python.pdf" }
+  ,"PY-57": { title: "Build a Logger with a Decorator", file: "24 - Build a Logger with a Decorator.pdf" }
+  ,"PY-58": { title: "Build an Authorization Decorator", file: "25 - Build an Authorization Decorator.pdf" }
+  ,"PY-59": { title: "Generators and Decorators in Python", file: "27 - Generators and Decorators in Python.pdf" }
 };
+
+export const cheatSheetGroups = [
+  {
+    id: "foundations",
+    title: "1. Python foundations",
+    required: true,
+    topics: ["PY-01", "PY-02", "PY-03", "PY-04", "PY-05", "PY-06", "PY-07", "PY-08", "PY-09"]
+  },
+  {
+    id: "conditionals",
+    title: "2. Conditionals",
+    required: false,
+    topics: ["PY-10", "PY-11", "PY-12"]
+  },
+  {
+    id: "loops",
+    title: "3. Loops",
+    required: false,
+    topics: ["PY-13", "PY-14", "PY-15", "PY-16", "PY-17", "PY-18", "PY-19", "PY-20", "PY-21"]
+  },
+  {
+    id: "functions",
+    title: "4. Functions and modular programming",
+    required: true,
+    topics: ["PY-35", "PY-36", "PY-37", "PY-38", "PY-39", "PY-40", "PY-41", "PY-42", "PY-43", "PY-44", "PY-45", "PY-46"]
+  },
+  {
+    id: "comprehensions",
+    title: "5. Comprehensions and memory efficiency",
+    required: true,
+    topics: ["PY-47", "PY-48", "PY-49", "PY-50", "PY-51"]
+  },
+  {
+    id: "generators-decorators",
+    title: "6. Generators and decorators",
+    required: true,
+    topics: ["PY-52", "PY-53", "PY-54", "PY-55", "PY-56", "PY-57", "PY-58", "PY-59"]
+  },
+  {
+    id: "object-oriented-programming",
+    title: "7. Object-oriented programming",
+    required: true,
+    topics: ["PY-22", "PY-23", "PY-24", "PY-25", "PY-26", "PY-27", "PY-28", "PY-29", "PY-30", "PY-31", "PY-32", "PY-33", "PY-34"]
+  },
+  {
+    id: "exception-handling",
+    title: "8. Exception handling",
+    required: true,
+    topics: []
+  },
+  {
+    id: "python-environments",
+    title: "9. Python environments",
+    required: true,
+    topics: []
+  },
+  {
+    id: "files-data-apis-databases",
+    title: "10. Files, JSON, CSV, APIs, and databases",
+    required: false,
+    priority: "HIGH PRIORITY",
+    topics: []
+  }
+];
 
 // Some PDFs reference fonts they do not embed; pdf.js needs its bundled font files to draw them.
 const standardFontDataUrl = `${join(dirname(createRequire(import.meta.url).resolve("pdfjs-dist/package.json")), "standard_fonts")}/`;
@@ -51,6 +140,38 @@ const pages = new Map();
 
 export function cheatSheetFor(lessonId) {
   return Object.hasOwn(cheatSheets, lessonId) ? cheatSheets[lessonId] : undefined;
+}
+
+export function listCheatSheets() {
+  return cheatSheetGroups.flatMap((group) => group.topics.map((id) => ({
+    id,
+    title: cheatSheets[id].title,
+    groupId: group.id,
+    groupTitle: group.title,
+    required: group.required
+  })));
+}
+
+export function listCheatSheetGroups() {
+  return cheatSheetGroups.map((group) => ({
+    id: group.id,
+    title: group.title,
+    required: group.required,
+    priority: group.priority ?? null,
+    topics: group.topics.map((id) => ({ id, title: cheatSheets[id].title }))
+  }));
+}
+
+export function cheatSheetNavigation(lessonId) {
+  const sheets = listCheatSheets();
+  const index = sheets.findIndex(({ id }) => id === lessonId);
+  if (index < 0) return undefined;
+  const previous = sheets[index - 1];
+  const next = sheets[index + 1];
+  return {
+    previous: previous ? { id: previous.id, title: previous.title } : null,
+    next: next ? { id: next.id, title: next.title } : null
+  };
 }
 
 // The PDF stays on the server; learners only receive rendered page images.

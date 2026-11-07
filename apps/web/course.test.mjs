@@ -2,11 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadPrograms, parsePrograms } from "./course.mjs";
 
-test("source content has 204 unique readable programs with the expected track counts", async () => {
+test("source content has 229 unique readable programs with the expected track counts", async () => {
   const programs = await loadPrograms();
-  assert.equal(programs.length, 204);
-  assert.equal(new Set(programs.map((program) => program.code)).size, 204);
-  for (const [track, count] of Object.entries({ FD: 12, TS: 100, NS: 42, PG: 16, PY: 34 })) {
+  assert.equal(programs.length, 229);
+  assert.equal(new Set(programs.map((program) => program.code)).size, 229);
+  for (const [track, count] of Object.entries({ FD: 12, TS: 100, NS: 42, PG: 16, PY: 59 })) {
     assert.equal(programs.filter((program) => program.code.startsWith(track)).length, count);
   }
   assert.match(programs.find((program) => program.code === "TS-01").body, /strictNullChecks/);

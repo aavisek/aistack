@@ -1,6 +1,6 @@
 # Backend Developer Course — Program Requirements Specification
 
-**Scope:** 204 unique programs — 12 Foundations (FD-01 to FD-12), 100 TypeScript (TS-01 to TS-100), 42 NestJS/Redis/BullMQ/AI (NS-01 to NS-42), 16 PostgreSQL (PG-01 to PG-16), and 34 Python topics (PY-01 to PY-34).
+**Scope:** 229 unique programs — 12 Foundations (FD-01 to FD-12), 100 TypeScript (TS-01 to TS-100), 42 NestJS/Redis/BullMQ/AI (NS-01 to NS-42), 16 PostgreSQL (PG-01 to PG-16), and 59 Python topics (PY-01 to PY-59).
 **Beginner note:** Start with Part 0 and follow the *Recommended Learning Order* table in it.
 **Source:** "Backend Developer Course for AI.txt". Duplicates removed: the PostgreSQL list appeared three times in the source (kept once), and the second NestJS 'Top 30' list overlapped with the first in 28 of 30 items (only 2 new programs added). The third list, a 'Top 50', overlapped in 39 of 50 items and added 11 new programs (NS-33 to NS-42 and PG-16). All overlaps are mapped in Part C.
 **How to use:** Each program has the same blocks: **Objective**, **Requirements** (what to build), **Input → Output**, **Acceptance criteria** (what "done" means), and **Tests** (minimum checks to write). Tick the checkbox when done.
@@ -40,7 +40,7 @@
 - Part B — NestJS Roadmap A: NS-01 … NS-30
 - Part C — NestJS additions (NS-31 … NS-42) and duplicate mapping tables for the 2nd and 3rd lists
 - Part D — PostgreSQL: PG-01 … PG-16
-- Part E — Python: PY-01 … PY-34
+- Part E — Python: PY-01 … PY-59
 
 ---
 
@@ -2104,4 +2104,191 @@ The Top 50 list was checked item by item. 38 of its 50 items duplicated programs
 - **Acceptance criteria:** The reference includes classes, instances, and methods; it demonstrates class and static methods; it demonstrates a validating property; it demonstrates inheritance and MRO inspection.
 - **Tests:** Run every script and compare its output with the lesson.
 
+### PY-47 List Comprehensions
+- [ ] **Objective:** Build readable list transformations with filters and expressions.
+- **Requirements:** Write examples that transform, filter, handle empty input, and compose a final list.
+- **Input → Output:** Numbers → a filtered list of squares.
+- **Acceptance criteria:** A list comprehension transforms values; an empty input is safe; a pipeline is composed readably; the final list is printed.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-48 Set Comprehensions
+- [ ] **Objective:** Create unique sets concisely.
+- **Requirements:** Normalize values, remove duplicates, filter entries, and print the resulting set.
+- **Input → Output:** Repeated words → unique normalized words.
+- **Acceptance criteria:** Set-comprehension syntax is used; duplicates are removed; filtering is deliberate; the unique result is printed.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-49 Dictionary Comprehensions
+- [ ] **Objective:** Build lookup dictionaries from iterable data.
+- **Requirements:** Transform keys and values, filter entries, and create a lookup-ready dictionary.
+- **Input → Output:** Names → name-length mapping.
+- **Acceptance criteria:** A dictionary comprehension is used; keys or values are transformed; entries are filtered; the mapping is printed.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-50 Generator Comprehensions for Memory Optimization
+- [ ] **Objective:** Produce values lazily with generator expressions.
+- **Requirements:** Create a generator expression, consume it lazily, compare it with eager data, and bound the result.
+- **Input → Output:** A numeric range → a bounded aggregate.
+- **Acceptance criteria:** A generator expression is created; values are consumed lazily; eager and lazy choices are compared; bounded output is printed.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-51 Comprehensions in Python
+- [ ] **Objective:** Select the right comprehension for a transformation.
+- **Requirements:** Demonstrate list, set, dictionary, and generator choices with conditions and readable nesting.
+- **Input → Output:** Mixed words → a focused transformed collection.
+- **Acceptance criteria:** The collection type matches the need; a condition is combined with an expression; nesting remains readable; a transformed result is printed.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-52 Generators with yield and next
+- [ ] **Objective:** Stream values with generator functions.
+- **Requirements:** Define a generator with `yield`, advance it with `next()`, show exhaustion, and print streamed values.
+- **Input → Output:** A limit → yielded squares.
+- **Acceptance criteria:** A generator function uses `yield`; `next()` advances it; exhaustion is handled; streamed values are visible.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-53 Infinite Generators
+- [ ] **Objective:** Use infinite streams safely.
+- **Requirements:** Define an infinite generator, take a finite prefix, and avoid materializing the stream.
+- **Input → Output:** An infinite counter → five values.
+- **Acceptance criteria:** The generator is intentionally infinite; a finite prefix is selected; eager materialization is avoided; the prefix is printed.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-54 Send Values to Generators
+- [ ] **Objective:** Use generator coroutines to receive values.
+- **Requirements:** Prime a coroutine, send values, maintain state, and return a final value.
+- **Input → Output:** Sent increments → running totals.
+- **Acceptance criteria:** `send()` receives values; the coroutine is primed; final state is returned; accumulated state is printed.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-55 yield from and Closing Generators
+- [ ] **Objective:** Delegate generator work and close streams deliberately.
+- **Requirements:** Delegate with `yield from`, capture a child return value, and demonstrate cleanup/closing.
+- **Input → Output:** Child stream → delegated values and result.
+- **Acceptance criteria:** `yield from` delegates; a subgenerator return value is captured; closing is deliberate; delegated output is printed.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-56 Decorators in Python
+- [ ] **Objective:** Wrap functions without changing their public contract.
+- **Requirements:** Write a decorator accepting arbitrary arguments, preserve metadata, and show the wrapped result.
+- **Input → Output:** A greeting call → logged greeting.
+- **Acceptance criteria:** A decorator wraps a function; `functools.wraps` preserves metadata; arbitrary arguments work; the wrapped result is printed.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-57 Build a Logger with a Decorator
+- [ ] **Objective:** Add deterministic call logging at a boundary.
+- **Requirements:** Log arguments and the function name while preserving return behavior and metadata.
+- **Input → Output:** A function call → log line and original result.
+- **Acceptance criteria:** Calls are logged; arguments and results remain visible; the function name is preserved; log output is deterministic.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-58 Build an Authorization Decorator
+- [ ] **Objective:** Enforce a role policy before business logic runs.
+- **Requirements:** Implement an authorization decorator that allows an admin and rejects another role clearly.
+- **Input → Output:** Caller role and name → authorized report or error.
+- **Acceptance criteria:** The role is checked before execution; authorized calls succeed; unauthorized calls fail clearly; policy is separate from business logic.
+- **Tests:** Run every script and compare output with the lesson.
+
+### PY-59 Generators and Decorators in Python
+- [ ] **Objective:** Combine lazy iteration with reusable wrappers.
+- **Requirements:** Decorate a generator, preserve lazy yielding, trace produced items, and compose both techniques.
+- **Input → Output:** A generator stream → traced values and final list.
+- **Acceptance criteria:** A generator function is decorated safely; values remain lazy; each item is recorded; the combined program is reusable.
+- **Tests:** Run every script and compare output with the lesson.
+
 *End of document.*
+
+### PY-35 Functions: Reducing Duplication and Splitting Complex Tasks
+- [ ] **Objective:** Use focused Python functions to remove duplication and split complex work into readable tasks.
+- **Key concepts:** Function definitions, parameters, return values, composition, and single responsibility.
+- **Requirements:** Write runnable examples that define and call a function, split a report into helpers, pass results through a pipeline, and compose a final result.
+- **Input → Output:** Small scripts print greetings, calculated totals, normalized data, and a composed report.
+- **Acceptance criteria:** A named function is defined and called; helpers return values that another helper consumes; a pipeline transforms input; the final function composes the helpers into a readable result.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-36 Functions: Three More Features
+- [ ] **Objective:** Use default arguments, keyword arguments, and annotations to make function interfaces clear.
+- **Key concepts:** Defaults, keyword calls, positional-only and keyword-only design, and annotations.
+- **Requirements:** Write runnable examples with a default, a keyword call, an annotated function, and a function combining defaults with a keyword-only option.
+- **Input → Output:** Scripts print formatted text, an area, repeated text, and a configured greeting.
+- **Acceptance criteria:** Omitted arguments use defaults; keyword arguments select parameters by name; annotations document parameters and results; a combined interface enforces a clear keyword option.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-37 Scope and Namespace in Functions
+- [ ] **Objective:** Explain local, global, enclosing, and built-in name lookup in Python functions.
+- **Key concepts:** LEGB lookup, local names, globals, closures, and function attributes.
+- **Requirements:** Write runnable examples that show local shadowing, read a global constant, create a closure, and inspect a function namespace.
+- **Input → Output:** Scripts print resolved names, a calculated total, a closure result, and a function attribute.
+- **Acceptance criteria:** A local name shadows an outer name; a function reads a module value; a closure retains an enclosing value; a function object can expose an attached attribute.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-38 Nonlocal versus Global Scopes
+- [ ] **Objective:** Choose `nonlocal` for enclosing state and reserve `global` for intentional module-wide state.
+- **Key concepts:** Closures, `nonlocal`, `global`, and encapsulated mutable state.
+- **Requirements:** Write runnable examples that update an enclosing counter, update closure state safely, update a global value, and compare the scopes.
+- **Input → Output:** Scripts print incrementing counters, scores, a changed module value, and toggled closure state.
+- **Acceptance criteria:** `nonlocal` updates an enclosing variable; a closure encapsulates mutable state; `global` updates a module name explicitly; the examples distinguish the two scopes.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-39 Handling Arguments in Functions
+- [ ] **Objective:** Design calls with required, optional, variadic positional, and variadic keyword arguments.
+- **Key concepts:** Positional arguments, keyword arguments, `*args`, `**kwargs`, and keyword-only interfaces.
+- **Requirements:** Write runnable examples using positional and keyword calls, collecting positional values, collecting keyword values, and validating a flexible call.
+- **Input → Output:** Scripts print connection labels, totals, sorted settings, and a structured flexible call.
+- **Acceptance criteria:** Required and default arguments work; `*args` collects positional values; `**kwargs` collects named values; a flexible function returns its arguments in an inspectable structure.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-40 Handling Multiple Returns in Functions
+- [ ] **Objective:** Return and unpack related values clearly from Python functions.
+- **Key concepts:** Tuple packing, unpacking, starred targets, and structured summaries.
+- **Requirements:** Write runnable examples returning two values, unpack them, use starred unpacking, and return a meaningful summary object.
+- **Input → Output:** Scripts print packed and unpacked extrema, a starred middle list, and a summary dictionary.
+- **Acceptance criteria:** Multiple return syntax creates a tuple; callers unpack values into names; starred unpacking captures a variable number of values; a structured return communicates named results.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-41 Lambdas, Pure versus Impure Functions
+- [ ] **Objective:** Use lambdas for small expressions and distinguish pure functions from functions that mutate outside state.
+- **Key concepts:** Lambda expressions, callbacks, determinism, side effects, and readability.
+- **Requirements:** Write runnable examples sorting with a lambda, defining a pure function, showing an impure function, and choosing a clear named function.
+- **Input → Output:** Scripts print sorted pairs, a pure result, an accumulated side effect, and a formatted name.
+- **Acceptance criteria:** A lambda supplies a short sort key; a pure function returns a repeatable result; an impure function visibly changes external state; a named function is preferred for a multi-step contract.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-42 Function Types in Python
+- [ ] **Objective:** Treat functions and callable objects as values that can be stored, passed, and returned.
+- **Key concepts:** First-class functions, callbacks, closures, `__call__`, and callable contracts.
+- **Requirements:** Write runnable examples storing a function, passing one as data, returning a configured function, and using a callable object.
+- **Input → Output:** Scripts print transformed text, a callback result, a powered number, and a prefixed greeting.
+- **Acceptance criteria:** A function is assigned and called through another name; a higher-order function accepts a callback; a closure returns a configured callable; an object with `__call__` behaves as a callable.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-43 Documenting Functions and Built-in Functions
+- [ ] **Objective:** Document function contracts and select standard built-ins instead of rewriting common operations.
+- **Key concepts:** Docstrings, annotations, `__doc__`, `__annotations__`, `len`, `sum`, `sorted`, and contracts.
+- **Requirements:** Write runnable examples with a docstring, useful built-ins, an annotated signature, and a documented average function.
+- **Input → Output:** Scripts print a docstring, collection statistics, annotations, and an average.
+- **Acceptance criteria:** A docstring describes a function; built-ins calculate and sort data; annotations are inspectable; a documented function states and fulfills its input/output contract.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-44 Functions in Python
+- [ ] **Objective:** Design complete Python functions with explicit contracts, validation, composition, and executable tests.
+- **Key concepts:** Parameters, return values, exceptions, helper composition, assertions, and edge cases.
+- **Requirements:** Write runnable examples with a clear contract, an invalid-input case, composed helpers, and assertions for expected behavior.
+- **Input → Output:** Scripts print a percentage, a handled validation error, a report, and a passing test message.
+- **Acceptance criteria:** A function states valid input and output; invalid input raises a specific error; helpers compose into a report; assertions verify the final behavior.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-45 Python Imports, Modules and __init__.py
+- [ ] **Objective:** Split Python code into modules and packages with deliberate import names and public surfaces.
+- **Key concepts:** Imports, modules, packages, `__init__.py`, aliases, and re-exports.
+- **Requirements:** Write runnable examples importing a standard module, using a local module path, exposing a package function, and using an explicit alias.
+- **Input → Output:** Scripts print a rounded value, a path suffix, a square root, and serialized JSON.
+- **Acceptance criteria:** A standard module is imported and used; a local module path is handled; package behavior can expose a public function; an import alias remains explicit.
+- **Tests:** Run every script and compare its output with the lesson.
+
+### PY-46 Python Imports
+- [ ] **Objective:** Control Python module execution with namespace imports, the main guard, module names, and explicit imports.
+- **Key concepts:** Module namespaces, `__name__`, `__main__`, import-time behavior, and wildcard-import avoidance.
+- **Requirements:** Write runnable examples importing a module namespace, using a main guard, inspecting the module name, and importing an explicit symbol.
+- **Input → Output:** Scripts print a statistical mean, guarded script output, the module name, and rounded pi.
+- **Acceptance criteria:** A namespace import keeps the module qualifier; a main guard runs only for script execution; `__name__` is inspected; an explicit symbol import is demonstrated without wildcard names.
+- **Tests:** Run every script and compare its output with the lesson.
